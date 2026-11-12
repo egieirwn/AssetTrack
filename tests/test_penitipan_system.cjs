@@ -150,6 +150,10 @@ function runTests() {
   // Jalankan Suite Verifikasi Final Keamanan SQL & Database (Phase B.2)
   const { runPhaseB2Tests } = require('./test_phase_b2_verification.cjs');
   runPhaseB2Tests();
+
+  // Jalankan Suite Guardrail Keamanan Test Harness Staging
+  const { runHarnessSafetyTests } = require('./test_harness_safety.cjs');
+  runHarnessSafetyTests();
 }
 
 runTests();

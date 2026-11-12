@@ -101,3 +101,4 @@ REVOKE ALL ON FUNCTION public.generate_borrowing_code() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.generate_borrowing_code() TO authenticated;
 
 COMMIT;
+
