@@ -90,7 +90,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 DROP TRIGGER IF EXISTS trigger_protect_item_quantities ON public.items;
 CREATE TRIGGER trigger_protect_item_quantities
@@ -127,7 +127,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 DROP TRIGGER IF EXISTS trigger_record_initial_stock ON public.items;
 CREATE TRIGGER trigger_record_initial_stock
@@ -322,7 +322,7 @@ BEGIN
     'transaction_code', v_code
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 -- ============================================================
 -- 5. HARDEN RPC: rpc_process_return
@@ -505,7 +505,7 @@ BEGIN
     'status', v_new_status
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 -- ============================================================
 -- 6. HARDEN RPC: rpc_adjust_stock (With Repair & Write-off Support)
@@ -666,7 +666,7 @@ BEGIN
     'under_repair_qty', v_new_repair
   );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 -- ============================================================
 -- 7. NEW ATOMIC RPC: rpc_cancel_borrowing
@@ -762,7 +762,7 @@ BEGIN
 
   RETURN jsonb_build_object('success', true, 'borrowing_id', p_borrowing_id, 'status', 'cancelled');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public, pg_temp;
 
 -- ============================================================
 -- 8. RESTRICT EXECUTE GRANTS: REVOKE FROM PUBLIC & anon
@@ -784,6 +784,30 @@ GRANT EXECUTE ON FUNCTION public.rpc_cancel_borrowing(UUID, TEXT) TO authenticat
 
 REVOKE ALL ON FUNCTION public.generate_borrowing_code() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.generate_borrowing_code() TO authenticated;
+
+-- ============================================================
+-- 9. COLUMN-LEVEL PRIVILEGE HARDENING & DELETE REVOCATION
+-- ============================================================
+-- Cabut UPDATE tingkat tabel dari role authenticated pada public.items.
+-- Berikan izin UPDATE HANYA untuk kolom metadata, sehingga kolom kuantitas
+-- (total_qty, available_qty, damaged_qty, under_repair_qty) secara fisik
+-- tidak memiliki izin UPDATE bagi client, dan HANYA dapat dimodifikasi oleh RPC.
+REVOKE UPDATE ON public.items FROM authenticated;
+GRANT UPDATE (
+  name,
+  category_id,
+  storage_location_id,
+  description,
+  condition,
+  min_stock_alert,
+  is_active,
+  updated_at,
+  updated_by
+) ON public.items TO authenticated;
+
+-- Cabut izin DELETE pada borrowings dan borrowing_items dari seluruh client role
+REVOKE DELETE ON public.borrowings FROM authenticated, anon, PUBLIC;
+REVOKE DELETE ON public.borrowing_items FROM authenticated, anon, PUBLIC;
 
 COMMIT;
 

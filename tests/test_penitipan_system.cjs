@@ -146,6 +146,10 @@ function runTests() {
   // Jalankan Suite Pengujian Keamanan & Integritas Transaksi (Phase B.1)
   const { runPhaseB1Tests } = require('./test_phase_b1_integrity.cjs');
   runPhaseB1Tests();
+
+  // Jalankan Suite Verifikasi Final Keamanan SQL & Database (Phase B.2)
+  const { runPhaseB2Tests } = require('./test_phase_b2_verification.cjs');
+  runPhaseB2Tests();
 }
 
 runTests();
