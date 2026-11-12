@@ -452,7 +452,7 @@ export default function Pickup() {
             </div>
             <div style={{ padding: '1.25rem' }}>
               <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
-                Pastikan seluruh checklist di bawah ini sudah diperiksa oleh satpam sebelum menyerahkan barang:
+                Pastikan seluruh checklist di bawah ini sudah diperiksa oleh petugas sebelum menyerahkan barang:
               </p>
               {Object.entries(checklistLabels).map(([key, label]) => (
                 <label key={key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', border: `1px solid ${checklist[key] ? 'var(--color-success, #16A34A)' : 'var(--color-border)'}`, borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem', cursor: 'pointer', backgroundColor: checklist[key] ? '#F0FDF4' : 'transparent', transition: 'all 0.15s' }}>

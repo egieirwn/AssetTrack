@@ -26,7 +26,7 @@ export default function Navbar() {
   };
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Pengguna';
-  const userRole = profile?.role || 'satpam';
+  const userRole = profile?.role || 'warehouse_keeper';
 
   const avatarInitials = profile?.full_name
     ? profile.full_name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase()
@@ -36,7 +36,7 @@ export default function Navbar() {
     <header className="topbar">
       <div className="topbar-brand">
         <Shield size={20} className="topbar-brand-icon" />
-        <span>Sistem Penitipan Barang Pengunjung</span>
+        <span>Sistem Manajemen Gudang · PT Vinix Seven Aurum</span>
       </div>
 
       <div className="topbar-user">
@@ -65,7 +65,7 @@ export default function Navbar() {
                   fontWeight: 600,
                   color: userRole === 'admin' ? 'var(--color-danger)' : 'var(--color-primary)'
                 }}>
-                  {userRole === 'admin' ? 'Administrator' : 'Petugas Keamanan'}
+                  {userRole === 'admin' ? 'Administrator' : 'Penjaga Gudang'}
                 </span>
                 {profile?.employee_id ? ` · ${profile.employee_id}` : ''}
               </p>
@@ -91,7 +91,7 @@ export default function Navbar() {
                     backgroundColor: userRole === 'admin' ? '#FEE2E2' : 'var(--color-primary-light)',
                     color: userRole === 'admin' ? '#991B1B' : 'var(--color-primary)'
                   }}>
-                    {userRole === 'admin' ? 'Admin' : 'Satpam'}
+                    {userRole === 'admin' ? 'Admin' : 'Penjaga Gudang'}
                   </span>
                 </div>
                 <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: 0 }}>{user?.email || ''}</p>

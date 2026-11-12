@@ -113,26 +113,31 @@ function runTests() {
     assert.strictEqual(isValidStatus('DIPINJAM'), false); // status sistem lama tidak valid
   });
 
-  // 8. Otorisasi Role Petugas
-  test('Sistem hanya mengenali role satpam dan admin', () => {
+  // 8. Otorisasi Role Petugas (Phase A Migration)
+  test('Sistem hanya mengenali role warehouse_keeper dan admin', () => {
     function isValidRole(role) {
-      return ['satpam', 'admin'].includes(role);
+      return ['warehouse_keeper', 'admin'].includes(role);
     }
 
-    assert.strictEqual(isValidRole('satpam'), true);
+    assert.strictEqual(isValidRole('warehouse_keeper'), true);
     assert.strictEqual(isValidRole('admin'), true);
+    assert.strictEqual(isValidRole('satpam'), false); // role lama sudah dimigrasi
     assert.strictEqual(isValidRole('mahasiswa'), false);
     assert.strictEqual(isValidRole('dosen'), false);
     assert.strictEqual(isValidRole('superadmin'), false);
   });
 
   console.log(`\n========================================`);
-  console.log(`Hasil Pengujian: ${passed} Lulus, ${failed} Gagal`);
+  console.log(`Hasil Pengujian Baseline: ${passed} Lulus, ${failed} Gagal`);
   console.log(`========================================\n`);
 
   if (failed > 0) {
     process.exit(1);
   }
+
+  // Jalankan Suite Pengujian Keamanan & Migrasi Role (Phase A)
+  const { runSecurityTests } = require('./test_phase_a_security.cjs');
+  runSecurityTests();
 }
 
 runTests();

@@ -38,7 +38,7 @@ export default function Sidebar() {
         {!collapsed && (
           <div className="logo-text">
             <h2>SiPenitip</h2>
-            <span>Sistem Penitipan Barang</span>
+            <span>PT Vinix Seven Aurum</span>
           </div>
         )}
       </div>
@@ -86,7 +86,7 @@ export default function Sidebar() {
         <div className="user-meta-sm">
           <p className="user-name-sm">{profile?.full_name || 'Pengguna'}</p>
           <span className={`role-badge role-${profile?.role}`}>
-            {profile?.role === 'admin' ? 'Administrator' : 'Petugas Keamanan'}
+            {profile?.role === 'admin' ? 'Administrator' : 'Penjaga Gudang'}
           </span>
         </div>
       </div>

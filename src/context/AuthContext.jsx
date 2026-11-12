@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
       const fallbackProfile = {
         id: userId,
         full_name: userMetadata?.full_name || '',
-        role: 'satpam',
+        role: 'warehouse_keeper',
         employee_id: '',
         shift: '',
         phone: '',
@@ -70,15 +70,15 @@ export const AuthProvider = ({ children }) => {
       const mockProfile = {
         id: 'local-mock-001',
         full_name: 'Admin Demo',
-        email: 'admin@perusahaan.com',
+        email: 'admin@vinix7aurum.com',
         role: 'admin',
-        employee_id: 'EMP-001',
+        employee_id: 'ADM-001',
         shift: 'Pagi',
         phone: '081234567890',
         is_active: true,
         profile_completed: true
       };
-      setUser({ id: 'local-mock-001', email: 'admin@perusahaan.com' });
+      setUser({ id: 'local-mock-001', email: 'admin@vinix7aurum.com' });
       setProfile(mockProfile);
       setLoading(false);
       return;
@@ -135,7 +135,16 @@ export const AuthProvider = ({ children }) => {
       email: email.trim(),
       password
     });
-    if (data?.user) await fetchProfile(data.user.id, data.user.user_metadata);
+    if (data?.user) {
+      const userProfile = await fetchProfile(data.user.id, data.user.user_metadata);
+      if (userProfile && userProfile.is_active === false) {
+        await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        return { data: null, error: new Error('Akun Anda telah dinonaktifkan. Hubungi Administrator.') };
+      }
+    }
     return { data, error };
   };
 
@@ -147,13 +156,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const updateUserProfile = async (updates) => {
+    // Strip privileged fields regardless of client state; DB trigger enforces this too
+    const { role, is_active, ...safeUpdates } = updates;
     if (!isConfigured) {
-      setProfile(prev => ({ ...prev, ...updates }));
-      return { data: { ...profile, ...updates }, error: null };
+      setProfile(prev => ({ ...prev, ...safeUpdates }));
+      return { data: { ...profile, ...safeUpdates }, error: null };
     }
     if (!user) return { data: null, error: new Error('User belum terautentikasi') };
 
-    const { role, ...safeUpdates } = updates;
     const { data, error } = await supabase
       .from('profiles')
       .update(safeUpdates)
@@ -190,15 +200,17 @@ export const AuthProvider = ({ children }) => {
     return null;
   };
 
-  // Role helpers
-  const isAdmin = profile?.role === 'admin';
-  const isSatpam = profile?.role === 'satpam';
-  const isStaff = isAdmin || isSatpam;
+  // Role & active status helpers
+  const isActive = profile?.is_active !== false;
+  const isAdmin = profile?.role === 'admin' && isActive;
+  const isWarehouseKeeper = profile?.role === 'warehouse_keeper' && isActive;
+  const isSatpam = isWarehouseKeeper; // alias kompatibilitas selama transisi
+  const isStaff = (isAdmin || isWarehouseKeeper) && isActive;
 
   return (
     <AuthContext.Provider value={{
       session, user, profile, loading, isConfigured,
-      isAdmin, isSatpam, isStaff,
+      isAdmin, isWarehouseKeeper, isSatpam, isStaff, isActive,
       signUp, signIn, signOut,
       updateUserProfile, updateUserEmail,
       resetPassword, updatePassword, refreshProfile

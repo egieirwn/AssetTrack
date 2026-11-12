@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserCog, Plus, Edit2, Save, X, RefreshCw, Shield, AlertCircle, Mail } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 const MOCK_STAFF = [
-  { id: '1', full_name: 'Admin Utama', email: 'admin@perusahaan.com', role: 'admin', employee_id: 'ADM-001', shift: 'Pagi', is_active: true, created_at: new Date().toISOString() },
-  { id: '2', full_name: 'Budi Satpam', email: 'budi@perusahaan.com', role: 'satpam', employee_id: 'SAT-001', shift: 'Pagi', is_active: true, created_at: new Date().toISOString() },
-  { id: '3', full_name: 'Siti Petugas', email: 'siti@perusahaan.com', role: 'satpam', employee_id: 'SAT-002', shift: 'Siang', is_active: true, created_at: new Date().toISOString() },
+  { id: '1', full_name: 'Admin Utama', email: 'admin@vinix7aurum.com', role: 'admin', employee_id: 'ADM-001', shift: 'Pagi', is_active: true, created_at: new Date().toISOString() },
+  { id: '2', full_name: 'Budi Santoso', email: 'budi@vinix7aurum.com', role: 'warehouse_keeper', employee_id: 'PG-001', shift: 'Pagi', is_active: true, created_at: new Date().toISOString() },
+  { id: '3', full_name: 'Siti Rahma', email: 'siti@vinix7aurum.com', role: 'warehouse_keeper', employee_id: 'PG-002', shift: 'Siang', is_active: true, created_at: new Date().toISOString() },
 ];
 
 export default function StaffManagement() {
+  const { user } = useAuth();
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
@@ -20,10 +22,15 @@ export default function StaffManagement() {
     setLoading(true);
     if (!isConfigured) { setStaff(MOCK_STAFF); setLoading(false); return; }
     try {
-      const { data } = await supabase.from('profiles').select('id, full_name, role, employee_id, shift, is_active, created_at').in('role', ['admin', 'satpam']).order('full_name');
+      const { data, error: fetchErr } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, role, employee_id, shift, is_active, created_at')
+        .in('role', ['admin', 'warehouse_keeper'])
+        .order('full_name');
+      if (fetchErr) throw fetchErr;
       setStaff(data || []);
     } catch (err) {
-      console.error(err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -32,19 +39,34 @@ export default function StaffManagement() {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleUpdate = async () => {
+    setError('');
     setSaving(true);
     if (!isConfigured) {
       setStaff(p => p.map(s => s.id === editing.id ? editing : s));
       setEditing(null); setSaving(false); return;
     }
-    const { error: err } = await supabase.from('profiles').update({ role: editing.role, employee_id: editing.employee_id, shift: editing.shift, is_active: editing.is_active }).eq('id', editing.id);
+    const { error: err } = await supabase
+      .from('profiles')
+      .update({
+        role: editing.role,
+        employee_id: editing.employee_id,
+        shift: editing.shift,
+        is_active: editing.is_active
+      })
+      .eq('id', editing.id);
     if (err) { setError(err.message); } else { setEditing(null); fetchData(); }
     setSaving(false);
   };
 
   const handleToggleActive = async (member) => {
+    setError('');
+    if (member.id === user?.id) {
+      setError('Administrator tidak dapat menonaktifkan akunnya sendiri.');
+      return;
+    }
     if (!isConfigured) { setStaff(p => p.map(s => s.id === member.id ? { ...s, is_active: !s.is_active } : s)); return; }
-    await supabase.from('profiles').update({ is_active: !member.is_active }).eq('id', member.id);
+    const { error: err } = await supabase.from('profiles').update({ is_active: !member.is_active }).eq('id', member.id);
+    if (err) { setError(err.message); return; }
     fetchData();
   };
 
@@ -55,7 +77,7 @@ export default function StaffManagement() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Manajemen Petugas</h1>
-          <p className="page-subtitle">{staff.length} petugas keamanan dan administrator terdaftar</p>
+          <p className="page-subtitle">{staff.length} penjaga gudang dan administrator terdaftar</p>
         </div>
         <button className="btn btn-secondary" onClick={fetchData} disabled={loading}><RefreshCw size={16} className={loading ? 'spin' : ''} /> Perbarui</button>
       </div>
@@ -87,19 +109,19 @@ export default function StaffManagement() {
                   <td>
                     {editing?.id === member.id ? (
                       <select className="form-input-inline" value={editing.role} onChange={e => setEditing(p => ({ ...p, role: e.target.value }))}>
-                        <option value="satpam">Satpam</option>
+                        <option value="warehouse_keeper">Penjaga Gudang</option>
                         <option value="admin">Admin</option>
                       </select>
                     ) : (
                       <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '999px', backgroundColor: member.role === 'admin' ? '#FEE2E2' : 'var(--color-primary-light, #DBEAFE)', color: member.role === 'admin' ? '#991B1B' : 'var(--color-primary)' }}>
                         <Shield size={11} style={{ marginRight: '0.25rem' }} />
-                        {member.role === 'admin' ? 'Administrator' : 'Petugas Keamanan'}
+                        {member.role === 'admin' ? 'Administrator' : 'Penjaga Gudang'}
                       </span>
                     )}
                   </td>
                   <td style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
                     {editing?.id === member.id ? (
-                      <input type="text" className="form-input-inline" value={editing.employee_id || ''} onChange={e => setEditing(p => ({ ...p, employee_id: e.target.value }))} placeholder="cth: SAT-001" style={{ width: '100px' }} />
+                      <input type="text" className="form-input-inline" value={editing.employee_id || ''} onChange={e => setEditing(p => ({ ...p, employee_id: e.target.value }))} placeholder="cth: PG-001" style={{ width: '100px' }} />
                     ) : member.employee_id || '—'}
                   </td>
                   <td style={{ fontSize: '0.875rem' }}>
@@ -142,7 +164,7 @@ export default function StaffManagement() {
 
       <div className="alert alert-info" style={{ marginTop: '1rem', fontSize: '0.8125rem', display: 'flex', gap: '0.5rem' }}>
         <Shield size={16} style={{ flexShrink: 0 }} />
-        Penambahan atau pengaturan login akun petugas baru dikelola melalui Supabase Authentication. Perubahan hak akses dan role satpam/admin dapat disesuaikan pada tabel di atas.
+        Undangan akun Penjaga Gudang baru dilakukan melalui server-side Supabase Edge Function (<code>admin-manage-staff</code>) dengan otorisasi Administrator aktif. Perubahan role dan status aktif dapat dikelola pada tabel di atas.
       </div>
     </div>
   );
