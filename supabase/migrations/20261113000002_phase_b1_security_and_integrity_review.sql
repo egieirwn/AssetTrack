@@ -798,8 +798,10 @@ GRANT UPDATE (
   category_id,
   storage_location_id,
   description,
+  asset_serial,
+  photo_url,
   condition,
-  min_stock_alert,
+  status,
   is_active,
   updated_at,
   updated_by

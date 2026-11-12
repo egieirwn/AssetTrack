@@ -40,7 +40,7 @@ function runPhaseB2Tests() {
     // Simulasi Lapisan 1: PostgreSQL Column-level privilege check
     const allowedClientUpdateColumns = new Set([
       'name', 'category_id', 'storage_location_id', 'description',
-      'condition', 'min_stock_alert', 'is_active', 'updated_at', 'updated_by'
+      'asset_serial', 'photo_url', 'condition', 'status', 'is_active', 'updated_at', 'updated_by'
     ]);
     const protectedQuantityColumns = ['total_qty', 'available_qty', 'damaged_qty', 'under_repair_qty'];
 
@@ -165,7 +165,7 @@ function runPhaseB2Tests() {
       name: 'Monitor LED 24 Inch',
       description: 'Layar monitor kerja',
       condition: 'baik',
-      min_stock_alert: 2,
+      asset_serial: 'SN-MON-001',
       is_active: true,
       total_qty: 5,
       available_qty: 5
@@ -175,7 +175,7 @@ function runPhaseB2Tests() {
       if (!['admin', 'warehouse_keeper'].includes(userRole)) {
         throw new Error('Akses ditolak: Bukan staf resmi.');
       }
-      const allowed = ['name', 'description', 'condition', 'min_stock_alert', 'is_active', 'category_id', 'storage_location_id'];
+      const allowed = ['name', 'description', 'condition', 'asset_serial', 'photo_url', 'status', 'is_active', 'category_id', 'storage_location_id'];
       for (const k of Object.keys(updates)) {
         if (!allowed.includes(k)) {
           throw new Error(`Kolom ${k} tidak diizinkan untuk update langsung.`);
@@ -186,11 +186,11 @@ function runPhaseB2Tests() {
 
     const updated = updateItemMetadata('warehouse_keeper', {
       name: 'Monitor LED 24 Inch Dell Professional',
-      min_stock_alert: 3
+      asset_serial: 'SN-MON-001-REV'
     });
 
     assert.strictEqual(updated.name, 'Monitor LED 24 Inch Dell Professional');
-    assert.strictEqual(updated.min_stock_alert, 3);
+    assert.strictEqual(updated.asset_serial, 'SN-MON-001-REV');
     assert.strictEqual(updated.available_qty, 5); // Stok tidak berubah
   });
 
@@ -349,3 +349,4 @@ module.exports = { runPhaseB2Tests };
 if (require.main === module) {
   runPhaseB2Tests();
 }
+
