@@ -142,6 +142,10 @@ function runTests() {
   // Jalankan Suite Pengujian Skema Gudang & Peminjaman (Phase B)
   const { runPhaseBTests } = require('./test_phase_b_schema.cjs');
   runPhaseBTests();
+
+  // Jalankan Suite Pengujian Keamanan & Integritas Transaksi (Phase B.1)
+  const { runPhaseB1Tests } = require('./test_phase_b1_integrity.cjs');
+  runPhaseB1Tests();
 }
 
 runTests();
