@@ -138,6 +138,10 @@ function runTests() {
   // Jalankan Suite Pengujian Keamanan & Migrasi Role (Phase A)
   const { runSecurityTests } = require('./test_phase_a_security.cjs');
   runSecurityTests();
+
+  // Jalankan Suite Pengujian Skema Gudang & Peminjaman (Phase B)
+  const { runPhaseBTests } = require('./test_phase_b_schema.cjs');
+  runPhaseBTests();
 }
 
 runTests();
