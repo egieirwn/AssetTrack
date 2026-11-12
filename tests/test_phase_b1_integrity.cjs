@@ -412,3 +412,4 @@ module.exports = { runPhaseB1Tests };
 if (require.main === module) {
   runPhaseB1Tests();
 }
+

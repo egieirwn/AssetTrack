@@ -152,11 +152,11 @@ DROP POLICY IF EXISTS "No deletion on borrowing_items" ON public.borrowing_items
 
 CREATE POLICY "No deletion on borrowings"
   ON public.borrowings FOR DELETE TO authenticated
-  WITH CHECK (false);
+  USING (false);
 
 CREATE POLICY "No deletion on borrowing_items"
   ON public.borrowing_items FOR DELETE TO authenticated
-  WITH CHECK (false);
+  USING (false);
 
 -- ============================================================
 -- 4. HARDEN RPC: rpc_create_borrowing
@@ -786,3 +786,4 @@ REVOKE ALL ON FUNCTION public.generate_borrowing_code() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.generate_borrowing_code() TO authenticated;
 
 COMMIT;
+
