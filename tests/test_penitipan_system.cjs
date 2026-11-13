@@ -154,6 +154,10 @@ function runTests() {
   // Jalankan Suite Guardrail Keamanan Test Harness Staging
   const { runHarnessSafetyTests } = require('./test_harness_safety.cjs');
   runHarnessSafetyTests();
+
+  // Jalankan Suite Pengujian Manajemen Akun Penjaga Gudang (Phase C)
+  const { runPhaseCTests } = require('./test_phase_c_account_management.cjs');
+  runPhaseCTests();
 }
 
 runTests();

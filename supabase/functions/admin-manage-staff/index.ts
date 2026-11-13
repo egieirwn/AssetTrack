@@ -127,7 +127,88 @@ serve(async (req) => {
       );
     }
 
-    // 2. ACTION: TOGGLE ACTIVE / DEACTIVATE
+    // 2. ACTION: UPDATE / EDIT WAREHOUSE KEEPER
+    if (action === "update_staff") {
+      if (!targetUserId) {
+        return new Response(
+          JSON.stringify({ error: "ID pengguna target wajib disertakan." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!fullName || !fullName.trim()) {
+        return new Response(
+          JSON.stringify({ error: "Nama lengkap wajib diisi." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Validasi bahwa target akun adalah Penjaga Gudang (bukan Admin)
+      const { data: targetProfile, error: targetError } = await adminClient
+        .from("profiles")
+        .select("id, role, is_active, email")
+        .eq("id", targetUserId)
+        .maybeSingle();
+
+      if (targetError || !targetProfile) {
+        return new Response(
+          JSON.stringify({ error: "Akun pengguna tidak ditemukan." }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (targetProfile.role !== "warehouse_keeper") {
+        return new Response(
+          JSON.stringify({ error: "Akses ditolak: Akun Administrator tidak dapat dimodifikasi melalui manajemen petugas gudang." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Sinkronkan email pada auth.users jika diubah
+      const cleanEmail = email ? email.trim() : targetProfile.email;
+      if (cleanEmail && cleanEmail.toLowerCase() !== (targetProfile.email || "").toLowerCase()) {
+        const { error: authUpdateError } = await adminClient.auth.admin.updateUserById(targetUserId, {
+          email: cleanEmail,
+          user_metadata: { full_name: fullName.trim() },
+        });
+
+        if (authUpdateError) {
+          return new Response(
+            JSON.stringify({ error: `Gagal memperbarui email otentikasi: ${authUpdateError.message}` }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+
+      // Perbarui metadata profil (role dipertahankan, tidak boleh dieskalasi)
+      const { data: updatedProfile, error: profileErr } = await adminClient
+        .from("profiles")
+        .update({
+          full_name: fullName.trim(),
+          email: cleanEmail,
+          employee_id: (employeeId || "").trim(),
+          shift: (shift || "").trim(),
+          phone: (phone || "").trim(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", targetUserId)
+        .select()
+        .single();
+
+      if (profileErr) {
+        return new Response(
+          JSON.stringify({ error: profileErr.message }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, message: "Data Penjaga Gudang berhasil diperbarui.", profile: updatedProfile }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 3. ACTION: TOGGLE ACTIVE / DEACTIVATE
     if (action === "toggle_active") {
       if (!targetUserId) {
         return new Response(
@@ -140,6 +221,27 @@ serve(async (req) => {
         return new Response(
           JSON.stringify({ error: "Administrator tidak dapat menonaktifkan akunnya sendiri." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Pastikan target adalah Penjaga Gudang (mencegah penonaktifan akun Admin melalui modul ini)
+      const { data: targetProfile, error: targetFetchError } = await adminClient
+        .from("profiles")
+        .select("role")
+        .eq("id", targetUserId)
+        .maybeSingle();
+
+      if (targetFetchError || !targetProfile) {
+        return new Response(
+          JSON.stringify({ error: "Akun target tidak ditemukan." }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (targetProfile.role !== "warehouse_keeper") {
+        return new Response(
+          JSON.stringify({ error: "Akses ditolak: Hanya akun Penjaga Gudang yang dapat diubah status aktifnya melalui modul ini." }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
