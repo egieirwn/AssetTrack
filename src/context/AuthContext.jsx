@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
       if (currentSession?.user) {
         try {
           const userProf = await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
-          if (mounted && userProf && userProf.is_active === false) {
+          if (mounted && (!userProf || userProf.is_active !== true)) {
             await supabase.auth.signOut();
             setSession(null);
             setUser(null);
@@ -113,7 +113,7 @@ export const AuthProvider = ({ children }) => {
       setUser(currentSession?.user || null);
       if (currentSession?.user) {
         const userProf = await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
-        if (mounted && userProf && userProf.is_active === false) {
+        if (mounted && (!userProf || userProf.is_active !== true)) {
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
@@ -151,12 +151,15 @@ export const AuthProvider = ({ children }) => {
     });
     if (data?.user) {
       const userProfile = await fetchProfile(data.user.id, data.user.user_metadata);
-      if (userProfile && userProfile.is_active === false) {
+      if (!userProfile || userProfile.is_active !== true) {
         await supabase.auth.signOut();
         setSession(null);
         setUser(null);
         setProfile(null);
-        return { data: null, error: new Error('Akun Anda telah dinonaktifkan oleh Administrator PT Vinix Seven Aurum. Silakan hubungi Administrator.') };
+        const msg = !userProfile
+          ? 'Profil akun tidak ditemukan di server. Hubungi Administrator.'
+          : 'Akun Anda telah dinonaktifkan oleh Administrator PT Vinix Seven Aurum. Silakan hubungi Administrator.';
+        return { data: null, error: new Error(msg) };
       }
     }
     return { data, error };
@@ -214,8 +217,51 @@ export const AuthProvider = ({ children }) => {
     return null;
   };
 
-  // Role & active status helpers
-  const isActive = profile?.is_active !== false;
+  // Revalidasi status profil langsung ke server Supabase (mencegah akun yang dinonaktifkan tetap beroperasi)
+  const revalidateActiveProfile = useCallback(async () => {
+    if (!isConfigured || !user?.id) return { valid: false, reason: 'UNAUTHENTICATED' };
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, role, is_active')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        // Gangguan jaringan ditangani terpisah dari deaktivasi akun
+        console.warn('Kendala jaringan saat revalidasi profil:', error.message);
+        return { valid: null, networkError: true, error };
+      }
+
+      if (!data) {
+        // Profil tidak ditemukan di server
+        if (isConfigured) await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        return { valid: false, reason: 'PROFILE_NOT_FOUND' };
+      }
+
+      if (data.is_active !== true) {
+        // Konfirmasi eksplisit akun nonaktif oleh Admin
+        if (isConfigured) await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        return { valid: false, reason: 'DEACTIVATED' };
+      }
+
+      // Profil valid dan aktif
+      setProfile(prev => (prev ? { ...prev, ...data } : data));
+      return { valid: true, profile: data };
+    } catch (err) {
+      return { valid: null, networkError: true, error: err };
+    }
+  }, [isConfigured, user?.id]);
+
+  // Role & active status helpers — FAIL CLOSED
+  const isActive = profile?.is_active === true;
   const isAdmin = profile?.role === 'admin' && isActive;
   const isWarehouseKeeper = profile?.role === 'warehouse_keeper' && isActive;
   const isSatpam = isWarehouseKeeper; // alias kompatibilitas selama transisi
@@ -227,7 +273,8 @@ export const AuthProvider = ({ children }) => {
       isAdmin, isWarehouseKeeper, isSatpam, isStaff, isActive,
       signUp, signIn, signOut,
       updateUserProfile, updateUserEmail,
-      resetPassword, updatePassword, refreshProfile
+      resetPassword, updatePassword, refreshProfile,
+      revalidateActiveProfile
     }}>
       {children}
     </AuthContext.Provider>

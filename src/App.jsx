@@ -19,6 +19,8 @@ import Visitors from './pages/Visitors';
 import DepositHistory from './pages/DepositHistory';
 import Profile from './pages/Profile';
 
+import FutureModulePlaceholder from './components/common/FutureModulePlaceholder';
+
 // Admin Pages
 import ItemCategories from './pages/admin/ItemCategories';
 import StorageLocations from './pages/admin/StorageLocations';
@@ -44,15 +46,19 @@ export default function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Modul Gudang Baru (Future Modules - Phase E & Phase F) */}
+        <Route path="/inventaris" element={<FutureModulePlaceholder pathOverride="/inventaris" />} />
+        <Route path="/peminjaman" element={<FutureModulePlaceholder pathOverride="/peminjaman" />} />
+        <Route path="/pengembalian" element={<FutureModulePlaceholder pathOverride="/pengembalian" />} />
+        <Route path="/peminjam" element={<FutureModulePlaceholder pathOverride="/peminjam" />} />
+
+        {/* Legacy Deposit Routes (Preserved for Historical Audit) */}
         <Route path="/penitipan-baru" element={<NewDeposit />} />
-        <Route path="/peminjaman" element={<NewDeposit />} />
         <Route path="/kartu-penitipan" element={<DepositCard />} />
         <Route path="/barang-dititipkan" element={<ActiveDeposits />} />
-        <Route path="/inventaris" element={<ActiveDeposits />} />
         <Route path="/pengambilan" element={<Pickup />} />
-        <Route path="/pengembalian" element={<Pickup />} />
         <Route path="/pengunjung" element={<Visitors />} />
-        <Route path="/peminjam" element={<Visitors />} />
         <Route path="/riwayat" element={<DepositHistory />} />
         <Route path="/profil" element={<Profile />} />
 
@@ -67,7 +73,7 @@ export default function App() {
           <ProtectedRoute allowedRoles={['admin']}><StaffManagement /></ProtectedRoute>
         } />
         <Route path="/laporan" element={
-          <ProtectedRoute allowedRoles={['admin']}><Reports /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['admin']}><FutureModulePlaceholder pathOverride="/laporan" /></ProtectedRoute>
         } />
       </Route>
 

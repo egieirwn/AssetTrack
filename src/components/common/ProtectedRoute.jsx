@@ -1,11 +1,28 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Shield, AlertCircle } from 'lucide-react';
 
 export default function ProtectedRoute({ children, allowedRoles = null }) {
-  const { user, profile, loading, isConfigured, signOut } = useAuth();
+  const { user, profile, loading, isConfigured, signOut, revalidateActiveProfile } = useAuth();
   const location = useLocation();
+  const [revalidationDeactivated, setRevalidationDeactivated] = useState(false);
+
+  // Server-backed profile revalidation upon route navigation
+  useEffect(() => {
+    let mounted = true;
+    if (isConfigured && user && revalidateActiveProfile) {
+      revalidateActiveProfile().then(result => {
+        if (!mounted) return;
+        if (result && result.valid === false && result.reason === 'DEACTIVATED') {
+          setRevalidationDeactivated(true);
+        }
+      }).catch(() => {
+        // Network errors are handled separately and do not falsely deactivate users
+      });
+    }
+    return () => { mounted = false; };
+  }, [location.pathname, user?.id, isConfigured, revalidateActiveProfile]);
 
   if (loading) {
     return (
@@ -39,7 +56,8 @@ export default function ProtectedRoute({ children, allowedRoles = null }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (profile && profile.is_active === false) {
+  // Fail closed: account must be explicitly active (is_active === true)
+  if (revalidationDeactivated || (profile && profile.is_active !== true)) {
     return (
       <div style={{
         minHeight: '100vh',
@@ -76,7 +94,7 @@ export default function ProtectedRoute({ children, allowedRoles = null }) {
           </div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#17191C', margin: 0 }}>Akun Dinonaktifkan</h2>
           <p style={{ color: '#5F646D', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
-            Akun Anda saat ini berstatus nonaktif. Akses ke sistem gudang telah ditutup. Silakan hubungi Administrator PT Vinix Seven Aurum untuk informasi lebih lanjut.
+            Akun Anda saat ini berstatus nonaktif di server PT Vinix Seven Aurum. Akses operasional sistem gudang telah ditutup. Silakan hubungi Administrator untuk informasi lebih lanjut.
           </p>
           <button
             type="button"

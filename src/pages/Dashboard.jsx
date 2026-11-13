@@ -4,7 +4,7 @@ import {
   Boxes, PackagePlus, ArrowLeftRight, Users, Clock,
   CheckCircle2, AlertTriangle, ArrowRight, RefreshCw,
   Sparkles, ShieldCheck, ChevronRight, Check,
-  AlertCircle, Tag, MapPin, UserCog
+  AlertCircle, Tag, MapPin, UserCog, WifiOff, Database
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -16,202 +16,211 @@ export default function Dashboard() {
 
   const [loading, setLoading] = useState(true);
   const [lastRefreshed, setLastRefreshed] = useState(null);
+  const [queryError, setQueryError] = useState(null);
 
-  // Warehouse KPI metrics
+  // Warehouse KPI metrics (default to real zeroes)
   const [stats, setStats] = useState({
     totalItems: 0,
     availableQty: 0,
     borrowedQty: 0,
-    damagedQty: 0,
+    maintenanceQty: 0,
     activeBorrowings: 0,
     overdueCount: 0,
     returnsDueToday: 0
   });
 
-  // Actionable priority tasks & recent borrowings
+  // Actionable priority tasks & real borrowings from database
   const [priorities, setPriorities] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
   const [urgentItem, setUrgentItem] = useState(null);
+  const [scheduleItems, setScheduleItems] = useState([]);
 
-  // Fetch warehouse data with graceful fallback
+  // Fetch warehouse data with strict integrity: NO silent mock fallback in production
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
+    setQueryError(null);
+
+    // Explicit dev-only demo mode: only allowed in Vite DEV when VITE_ENABLE_DEV_DEMO is explicitly 'true'
+    // In production (import.meta.env.PROD), this is strictly FALSE.
+    const isExplicitDevDemo = Boolean(
+      import.meta.env.DEV &&
+      import.meta.env.VITE_ENABLE_DEV_DEMO === 'true'
+    );
 
     if (!isConfigured) {
-      // Mock Data for offline / demo mode
-      setTimeout(() => {
-        setStats({
-          totalItems: 96,
-          availableQty: 82,
-          borrowedQty: 11,
-          damagedQty: 3,
-          activeBorrowings: 6,
-          overdueCount: 2,
-          returnsDueToday: 3
-        });
+      if (isExplicitDevDemo) {
+        // Development-only demo mode
+        setTimeout(() => {
+          setStats({
+            totalItems: 96,
+            availableQty: 82,
+            borrowedQty: 11,
+            maintenanceQty: 3,
+            activeBorrowings: 6,
+            overdueCount: 2,
+            returnsDueToday: 3
+          });
+          setUrgentItem({
+            title: 'Pengembalian Terlambat: Tiket #BRW-DEMO-0004',
+            borrower: 'Rian Prasetya · Divisi Multimedia',
+            dueTime: 'Jatuh tempo: Kemarin',
+            code: 'BRW-DEMO-0004'
+          });
+          setLastRefreshed(new Date());
+          setLoading(false);
+        }, 200);
+        return;
+      }
 
-        setUrgentItem({
-          title: 'Pengembalian Terlambat: Proyektor Epson EB-X400',
-          borrower: 'Rian Prasetya · Divisi Multimedia',
-          dueTime: 'Jatuh tempo: Kemarin, 16:00 WIB',
-          code: 'BRW-20261112-0004'
-        });
-
-        setPriorities([
-          {
-            id: 'p1',
-            title: 'Verifikasi pengembalian 2 unit Walkie Talkie Motorola',
-            context: 'Budi Santoso · Divisi Keamanan',
-            status: 'completed',
-            statusLabel: 'Selesai',
-            time: '08:45'
-          },
-          {
-            id: 'p2',
-            title: 'Konfirmasi peminjaman Toolkit Teknis Gudang',
-            context: 'Ahmad Fauzi · Divisi Pemeliharaan',
-            status: 'in_progress',
-            statusLabel: 'Dipinjam',
-            time: '10:15'
-          },
-          {
-            id: 'p3',
-            title: 'Tindak lanjut pengembalian Proyektor Lab Terlambat',
-            context: 'Rian Prasetya · Divisi Multimedia',
-            status: 'overdue',
-            statusLabel: 'Terlambat',
-            time: 'Kemarin'
-          },
-          {
-            id: 'p4',
-            title: 'Inspeksi berkala unit printer barcode yang diperbaiki',
-            context: 'Tim Maintenance · Lokasi B-02',
-            status: 'pending',
-            statusLabel: 'Menunggu',
-            time: '14:00'
-          }
-        ]);
-
-        setRecentTransactions([
-          {
-            id: 'tx-1',
-            code: 'BRW-20261113-0001',
-            borrowerName: 'Siti Rahma',
-            itemSummary: '1x Laptop Dell Latitude 5420',
-            status: 'borrowed',
-            time: '10 menit yang lalu'
-          },
-          {
-            id: 'tx-2',
-            code: 'BRW-20261113-0002',
-            borrowerName: 'Budi Santoso',
-            itemSummary: '2x Radio HT Motorola CP1660',
-            status: 'returned',
-            time: '45 menit yang lalu'
-          },
-          {
-            id: 'tx-3',
-            code: 'BRW-20261112-0004',
-            borrowerName: 'Rian Prasetya',
-            itemSummary: '1x Proyektor Epson EB-X400',
-            status: 'overdue',
-            time: '1 hari yang lalu'
-          }
-        ]);
-
-        setLastRefreshed(new Date());
-        setLoading(false);
-      }, 300);
+      // Offline / Unconfigured state: Show clear connection notice, never silent mock data
+      setLoading(false);
       return;
     }
 
     try {
-      // 1. Fetch Items inventory summary
+      const now = new Date();
+      const todayDateStr = now.toISOString().split('T')[0];
+
+      // 1. Fetch Items inventory summary using actual schema columns
       const { data: items, error: itemsError } = await supabase
         .from('items')
-        .select('total_qty, available_qty, damaged_qty, under_repair_qty');
+        .select('id, item_code, name, total_qty, available_qty, damaged_qty, under_repair_qty, status, is_active');
 
-      let totalItems = 0;
-      let availableQty = 0;
-      let damagedQty = 0;
-
-      if (!itemsError && items && items.length > 0) {
-        items.forEach(item => {
-          totalItems += item.total_qty || 0;
-          availableQty += item.available_qty || 0;
-          damagedQty += (item.damaged_qty || 0) + (item.under_repair_qty || 0);
-        });
+      if (itemsError) {
+        throw new Error(`Gagal memuat inventaris: ${itemsError.message}`);
       }
 
-      // 2. Fetch Borrowings summary
+      // 2. Fetch Borrowings summary using actual Phase B schema:
+      // transaction_code, expected_return_at, borrowed_at, status, borrower_id
       const { data: borrowings, error: borrowingsError } = await supabase
         .from('borrowings')
         .select(`
-          id, borrowing_code, status, borrow_date, due_date, returned_at,
-          borrowers (full_name, department)
+          id,
+          transaction_code,
+          status,
+          borrowed_at,
+          expected_return_at,
+          returned_at,
+          borrowers (
+            id,
+            full_name,
+            employee_id,
+            department
+          )
         `)
         .order('created_at', { ascending: false })
         .limit(10);
 
+      if (borrowingsError) {
+        throw new Error(`Gagal memuat transaksi peminjaman: ${borrowingsError.message}`);
+      }
+
+      // Compute actual inventory metrics
+      let totalItems = 0;
+      let availableQty = 0;
+      let maintenanceQty = 0;
+
+      if (items && items.length > 0) {
+        items.forEach(item => {
+          totalItems += item.total_qty || 0;
+          availableQty += item.available_qty || 0;
+          maintenanceQty += (item.damaged_qty || 0) + (item.under_repair_qty || 0);
+        });
+      }
+
+      // Compute actual borrowing metrics based on real database status and expected_return_at
       let activeBorrowings = 0;
       let overdueCount = 0;
       let returnsDueToday = 0;
-      const now = new Date();
-      const todayDateStr = now.toISOString().split('T')[0];
+      let firstOverdueBorrowing = null;
+      const todayScheduled = [];
+      const derivedPriorities = [];
 
-      if (!borrowingsError && borrowings && borrowings.length > 0) {
+      if (borrowings && borrowings.length > 0) {
         borrowings.forEach(b => {
-          if (['borrowed', 'partial_returned'].includes(b.status)) {
+          const isActiveBorrowing = ['borrowed', 'partial_returned', 'overdue'].includes(b.status);
+          const isOverdue = b.status === 'overdue' || (
+            ['borrowed', 'partial_returned'].includes(b.status) &&
+            b.expected_return_at &&
+            new Date(b.expected_return_at) < now
+          );
+
+          if (isActiveBorrowing) {
             activeBorrowings++;
-            if (b.due_date && new Date(b.due_date) < now) {
+
+            if (isOverdue) {
               overdueCount++;
+              if (!firstOverdueBorrowing) {
+                firstOverdueBorrowing = b;
+              }
+              derivedPriorities.push({
+                id: b.id,
+                title: `Tindak lanjut pengembalian #${b.transaction_code}`,
+                context: `${b.borrowers?.full_name || 'Peminjam'} · ${b.borrowers?.department || 'Karyawan'}`,
+                status: 'overdue',
+                statusLabel: 'Terlambat',
+                time: new Date(b.expected_return_at).toLocaleDateString('id-ID')
+              });
+            } else {
+              derivedPriorities.push({
+                id: b.id,
+                title: `Peminjaman aktif #${b.transaction_code}`,
+                context: `${b.borrowers?.full_name || 'Peminjam'} · ${b.borrowers?.department || 'Karyawan'}`,
+                status: 'in_progress',
+                statusLabel: b.status === 'partial_returned' ? 'Parsial' : 'Dipinjam',
+                time: new Date(b.borrowed_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+              });
             }
-            if (b.due_date && b.due_date.startsWith(todayDateStr)) {
+
+            if (b.expected_return_at && b.expected_return_at.startsWith(todayDateStr)) {
               returnsDueToday++;
+              todayScheduled.push(b);
+            }
+          } else if (b.status === 'returned') {
+            if (derivedPriorities.length < 4) {
+              derivedPriorities.push({
+                id: b.id,
+                title: `Pengembalian selesai #${b.transaction_code}`,
+                context: `${b.borrowers?.full_name || 'Peminjam'} · ${b.borrowers?.department || 'Karyawan'}`,
+                status: 'completed',
+                statusLabel: 'Selesai',
+                time: b.returned_at ? new Date(b.returned_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Hari ini'
+              });
             }
           }
         });
-
-        // Set urgent item from the first overdue borrowing
-        const firstOverdue = borrowings.find(b => ['borrowed', 'partial_returned'].includes(b.status) && b.due_date && new Date(b.due_date) < now);
-        if (firstOverdue) {
-          setUrgentItem({
-            title: `Pengembalian Terlambat: Tiket #${firstOverdue.borrowing_code}`,
-            borrower: `${firstOverdue.borrowers?.full_name || 'Peminjam'} · ${firstOverdue.borrowers?.department || 'Karyawan'}`,
-            dueTime: `Jatuh tempo: ${new Date(firstOverdue.due_date).toLocaleDateString('id-ID')}`,
-            code: firstOverdue.borrowing_code
-          });
-        }
       }
 
-      const borrowedQty = Math.max(0, totalItems - availableQty - damagedQty);
+      const borrowedQty = Math.max(0, totalItems - (availableQty + maintenanceQty));
 
-      // If database is completely fresh and has no items yet, provide pleasant initial state
-      if (totalItems === 0 && (!borrowings || borrowings.length === 0)) {
-        setStats({
-          totalItems: 0,
-          availableQty: 0,
-          borrowedQty: 0,
-          damagedQty: 0,
-          activeBorrowings: 0,
-          overdueCount: 0,
-          returnsDueToday: 0
+      setStats({
+        totalItems,
+        availableQty,
+        borrowedQty,
+        maintenanceQty,
+        activeBorrowings,
+        overdueCount,
+        returnsDueToday
+      });
+
+      if (firstOverdueBorrowing) {
+        setUrgentItem({
+          title: `Pengembalian Terlambat: Tiket #${firstOverdueBorrowing.transaction_code}`,
+          borrower: `${firstOverdueBorrowing.borrowers?.full_name || 'Peminjam'} · ${firstOverdueBorrowing.borrowers?.department || 'Karyawan'}`,
+          dueTime: `Jatuh tempo: ${new Date(firstOverdueBorrowing.expected_return_at).toLocaleString('id-ID')}`,
+          code: firstOverdueBorrowing.transaction_code
         });
       } else {
-        setStats({
-          totalItems,
-          availableQty,
-          borrowedQty,
-          damagedQty,
-          activeBorrowings,
-          overdueCount,
-          returnsDueToday
-        });
+        setUrgentItem(null);
       }
 
+      setPriorities(derivedPriorities.slice(0, 4));
+      setScheduleItems(todayScheduled);
+      setRecentTransactions(borrowings || []);
       setLastRefreshed(new Date());
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
+      setQueryError(err.message || 'Terjadi kesalahan saat memuat data database.');
     } finally {
       setLoading(false);
     }
@@ -221,7 +230,80 @@ export default function Dashboard() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  const displayName = profile?.full_name || 'Petugas';
+  // STATE C: Unconfigured / Offline State
+  if (!isConfigured) {
+    return (
+      <div className="atrium-bento-grid">
+        <section className="atrium-card col-span-12" style={{ textAlign: 'center', padding: '3.5rem 2rem' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            backgroundColor: '#F1F0F4',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.25rem',
+            color: 'var(--atrium-text-secondary)'
+          }}>
+            <WifiOff size={28} />
+          </div>
+          <h2 style={{ fontSize: '1.375rem', fontWeight: 800, color: 'var(--atrium-text-primary)', margin: '0 0 0.5rem 0' }}>
+            Koneksi Database Belum Dikonfigurasi
+          </h2>
+          <p style={{ fontSize: '0.875rem', color: 'var(--atrium-text-secondary)', maxWidth: '520px', margin: '0 auto 1.75rem', lineHeight: 1.6 }}>
+            Aplikasi berjalan tanpa koneksi Supabase aktif. Dashboard operasional tidak menampilkan data rekaan dalam mode ini. Silakan periksa kredensial environment sistem Anda.
+          </p>
+          <button
+            type="button"
+            className="atrium-btn-dark"
+            onClick={fetchDashboardData}
+          >
+            Muat Ulang Halaman
+          </button>
+        </section>
+      </div>
+    );
+  }
+
+  // STATE D: Database Query Failure
+  if (queryError) {
+    return (
+      <div className="atrium-bento-grid">
+        <section className="atrium-card col-span-12" style={{ textAlign: 'center', padding: '3rem 2rem', border: '1px solid #FECACA' }}>
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '16px',
+            backgroundColor: '#FEE2E2',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1.25rem',
+            color: '#DC2626'
+          }}>
+            <AlertCircle size={28} />
+          </div>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#991B1B', margin: '0 0 0.5rem 0' }}>
+            Gagal Memuat Data Operasional Gudang
+          </h2>
+          <p style={{ fontSize: '0.8125rem', color: '#B91C1C', maxWidth: '560px', margin: '0 auto 1.5rem', lineHeight: 1.5 }}>
+            {queryError}
+          </p>
+          <button
+            type="button"
+            className="atrium-btn-dark"
+            onClick={fetchDashboardData}
+          >
+            <RefreshCw size={14} style={{ marginRight: '0.4rem', verticalAlign: 'middle' }} />
+            Coba Muat Ulang Data
+          </button>
+        </section>
+      </div>
+    );
+  }
+
+  const hasNoItems = stats.totalItems === 0;
 
   return (
     <div className="atrium-bento-grid">
@@ -239,7 +321,7 @@ export default function Dashboard() {
             <div className="atrium-agent-meta">
               <span className="atrium-agent-name">Ringkasan Operasional Gudang</span>
               <span className="atrium-agent-time">
-                {lastRefreshed ? `Diperbarui pukul ${lastRefreshed.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB` : 'Sinkronisasi aktif'}
+                {lastRefreshed ? `Sinkron pukul ${lastRefreshed.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB` : 'Sinkronisasi aktif'}
               </span>
             </div>
           </div>
@@ -249,7 +331,7 @@ export default function Dashboard() {
             className="atrium-mini-pill"
             onClick={fetchDashboardData}
             disabled={loading}
-            title="Muat ulang status data"
+            title="Segarkan data dari database"
           >
             <RefreshCw size={13} className={loading ? 'spin' : ''} />
             <span>Segarkan</span>
@@ -257,13 +339,17 @@ export default function Dashboard() {
         </div>
 
         <div className="atrium-hero-quote">
-          {stats.overdueCount > 0 ? (
+          {hasNoItems ? (
             <>
-              Terdapat <strong>{stats.overdueCount} transaksi pengembalian terlambat</strong> yang memerlukan tindak lanjut segera, dan <strong>{stats.availableQty} unit barang</strong> siap untuk dipinjamkan.
+              Inventaris gudang belum memiliki data aset terdaftar. Silakan tambahkan data master inventaris pada modul manajemen barang (Phase E).
+            </>
+          ) : stats.overdueCount > 0 ? (
+            <>
+              Terdapat <strong>{stats.overdueCount} transaksi pengembalian terlambat</strong> yang memerlukan tindak lanjut segera, dan <strong>{stats.availableQty} unit barang</strong> siap dialokasikan.
             </>
           ) : (
             <>
-              Seluruh operasional gudang berjalan tertib. <strong>{stats.availableQty} unit barang</strong> dalam kondisi prima dan siap dialokasikan.
+              Seluruh transaksi berjalan tertib. <strong>{stats.availableQty} unit barang</strong> dalam kondisi siap pakai dan <strong>{stats.borrowedQty} unit</strong> sedang dipinjamkan.
             </>
           )}
         </div>
@@ -273,7 +359,7 @@ export default function Dashboard() {
             <button
               type="button"
               className="atrium-mini-pill"
-              onClick={() => navigate('/barang-dititipkan')}
+              onClick={() => navigate('/inventaris')}
             >
               <Boxes size={14} />
               <span>Stok Siap: {stats.availableQty} Unit</span>
@@ -282,21 +368,21 @@ export default function Dashboard() {
             <button
               type="button"
               className="atrium-mini-pill"
-              onClick={() => navigate('/riwayat')}
+              onClick={() => navigate('/peminjaman')}
             >
               <ArrowLeftRight size={14} />
               <span>Pinjaman Aktif: {stats.activeBorrowings}</span>
             </button>
 
-            {stats.damagedQty > 0 && (
+            {stats.maintenanceQty > 0 && (
               <button
                 type="button"
                 className="atrium-mini-pill"
                 style={{ backgroundColor: '#FEF2F2', color: '#991B1B' }}
-                onClick={() => navigate('/barang-dititipkan')}
+                onClick={() => navigate('/inventaris')}
               >
                 <AlertTriangle size={14} />
-                <span>Perlu Servis: {stats.damagedQty}</span>
+                <span>Perlu Perbaikan: {stats.maintenanceQty}</span>
               </button>
             )}
           </div>
@@ -304,9 +390,9 @@ export default function Dashboard() {
           <button
             type="button"
             className="atrium-link-action"
-            onClick={() => navigate('/barang-dititipkan')}
+            onClick={() => navigate('/inventaris')}
           >
-            <span>Buka Inventaris Lengkap</span>
+            <span>Buka Inventaris Gudang</span>
             <ArrowRight size={14} />
           </button>
         </div>
@@ -319,53 +405,73 @@ export default function Dashboard() {
             <h3 className="atrium-attention-title">
               <span>Perlu Perhatian Segera</span>
               <span className="atrium-count-bubble">
-                {stats.overdueCount > 0 ? stats.overdueCount : '1'}
+                {stats.overdueCount}
               </span>
             </h3>
             <button
               type="button"
               className="atrium-link-action"
               style={{ fontSize: '0.75rem' }}
-              onClick={() => navigate('/riwayat')}
+              onClick={() => navigate('/peminjaman')}
             >
               Lihat semua
             </button>
           </div>
 
-          <div className="atrium-attention-box">
-            <div className="atrium-attention-box-top">
-              <div className="atrium-attention-box-icon">
-                <AlertCircle size={16} color="#DC2626" />
+          {urgentItem ? (
+            <div className="atrium-attention-box">
+              <div className="atrium-attention-box-top">
+                <div className="atrium-attention-box-icon">
+                  <AlertCircle size={16} color="#DC2626" />
+                </div>
+                <span className="atrium-attention-box-title">
+                  {urgentItem.title}
+                </span>
               </div>
-              <span className="atrium-attention-box-title">
-                {urgentItem?.title || 'Pengembalian Terlambat: Proyektor EB-X400'}
+              <p className="atrium-attention-box-desc">
+                {urgentItem.borrower} · {urgentItem.dueTime}
+              </p>
+
+              <div className="atrium-btn-group">
+                <button
+                  type="button"
+                  className="atrium-btn-dark"
+                  onClick={() => navigate('/pengembalian')}
+                >
+                  Proses
+                </button>
+                <button
+                  type="button"
+                  className="atrium-btn-light"
+                  onClick={() => navigate('/peminjaman')}
+                >
+                  Tinjau
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              backgroundColor: '#FAF9FB',
+              borderRadius: '14px',
+              padding: '1.25rem 1rem',
+              textAlign: 'center',
+              color: 'var(--atrium-text-muted)',
+              fontSize: '0.8125rem',
+              marginBottom: '1rem'
+            }}>
+              <CheckCircle2 size={24} color="#16A34A" style={{ margin: '0 auto 0.5rem' }} />
+              <p style={{ margin: 0, fontWeight: 600, color: 'var(--atrium-text-primary)' }}>
+                Tidak Ada Transaksi Mendesak
+              </p>
+              <span style={{ fontSize: '0.75rem' }}>
+                Seluruh pengembalian dalam status tepat waktu atau belum ada transaksi aktif.
               </span>
             </div>
-            <p className="atrium-attention-box-desc">
-              {urgentItem?.borrower || 'Rian Prasetya · Divisi Multimedia'} · {urgentItem?.dueTime || 'Jatuh tempo: Kemarin'}
-            </p>
-
-            <div className="atrium-btn-group">
-              <button
-                type="button"
-                className="atrium-btn-dark"
-                onClick={() => navigate('/penitipan-baru')}
-              >
-                Proses
-              </button>
-              <button
-                type="button"
-                className="atrium-btn-light"
-                onClick={() => navigate('/riwayat')}
-              >
-                Tinjau
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--atrium-text-muted)' }}>
-          <span>+2 peminjaman lain mendekati jatuh tempo</span>
+          <span>{stats.overdueCount > 0 ? `${stats.overdueCount} transaksi terlambat` : 'Semua transaksi tertib'}</span>
           <ChevronRight size={14} />
         </div>
       </section>
@@ -392,7 +498,7 @@ export default function Dashboard() {
         </div>
 
         <div className="atrium-kpi-bottom">
-          <span>Kondisi Normal</span>
+          <span>{hasNoItems ? 'Belum Ada Aset' : 'Kondisi Normal'}</span>
           <div className="atrium-soundwave" aria-hidden="true">
             <span style={{ height: '8px' }} />
             <span style={{ height: '14px' }} />
@@ -440,17 +546,19 @@ export default function Dashboard() {
           <div className="atrium-schedule-header">
             <div>
               <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: 0, color: 'var(--atrium-text-primary)' }}>
-                Jadwal & Agenda Pengembalian
+                Jadwal Pengembalian Hari Ini
               </h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--atrium-text-muted)', margin: '0.2rem 0 0 0' }}>
-                Hari ini: 3 transaksi pengembalian · 1 telah selesai diverifikasi
+                {stats.returnsDueToday > 0
+                  ? `${stats.returnsDueToday} transaksi jatuh tempo hari ini`
+                  : 'Tidak ada jadwal jatuh tempo pengembalian hari ini'}
               </p>
             </div>
             <button
               type="button"
               className="atrium-link-action"
               style={{ fontSize: '0.75rem' }}
-              onClick={() => navigate('/riwayat')}
+              onClick={() => navigate('/peminjaman')}
             >
               Buka agenda
             </button>
@@ -468,28 +576,34 @@ export default function Dashboard() {
         </div>
 
         <div className="atrium-schedule-footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span style={{
-              backgroundColor: '#17191C',
-              color: '#FFFFFF',
-              borderRadius: '6px',
-              padding: '0.15rem 0.5rem',
-              fontSize: '0.6875rem',
-              fontWeight: 700
-            }}>
-              13:30
+          {scheduleItems.length > 0 ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span style={{
+                backgroundColor: '#17191C',
+                color: '#FFFFFF',
+                borderRadius: '6px',
+                padding: '0.15rem 0.5rem',
+                fontSize: '0.6875rem',
+                fontWeight: 700
+              }}>
+                Hari Ini
+              </span>
+              <span style={{ fontWeight: 600, color: 'var(--atrium-text-primary)' }}>
+                Jatuh tempo: #{scheduleItems[0].transaction_code} oleh {scheduleItems[0].borrowers?.full_name || 'Peminjam'}
+              </span>
+            </div>
+          ) : (
+            <span style={{ color: 'var(--atrium-text-muted)', fontSize: '0.75rem' }}>
+              Tidak ada jadwal pengembalian tercatat untuk hari ini.
             </span>
-            <span style={{ fontWeight: 600, color: 'var(--atrium-text-primary)' }}>
-              Berikutnya: Pengembalian 1x Laptop Lab Multimedia oleh Rian P.
-            </span>
-          </div>
+          )}
           <button
             type="button"
             className="atrium-btn-dark"
             style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
-            onClick={() => navigate('/penitipan-baru')}
+            onClick={() => navigate('/pengembalian')}
           >
-            Terima
+            Serah Terima
           </button>
         </div>
       </section>
@@ -506,59 +620,68 @@ export default function Dashboard() {
               Prioritas Operasional Hari Ini
             </h3>
             <p style={{ fontSize: '0.75rem', color: 'var(--atrium-text-muted)', margin: '0.2rem 0 0 0' }}>
-              Tugas & verifikasi penting yang direkomendasikan sistem
+              Tugas & verifikasi pengembalian aset dari database
             </p>
           </div>
           <button
             type="button"
             className="atrium-link-action"
             style={{ fontSize: '0.75rem' }}
-            onClick={() => navigate('/riwayat')}
+            onClick={() => navigate('/peminjaman')}
           >
             Lihat semua
           </button>
         </div>
 
         <div>
-          {priorities.map((item) => (
-            <div key={item.id} className="atrium-priority-item">
-              <div className="atrium-priority-left">
-                <div
-                  className={`atrium-checkbox-circle${item.status === 'completed' ? ' checked' : ''}`}
-                  aria-hidden="true"
-                >
-                  {item.status === 'completed' && <Check size={14} />}
+          {priorities.length > 0 ? (
+            priorities.map((item) => (
+              <div key={item.id} className="atrium-priority-item">
+                <div className="atrium-priority-left">
+                  <div
+                    className={`atrium-checkbox-circle${item.status === 'completed' ? ' checked' : ''}`}
+                    aria-hidden="true"
+                  >
+                    {item.status === 'completed' && <Check size={14} />}
+                  </div>
+                  <div className="atrium-priority-info">
+                    <h4 style={{ textDecoration: item.status === 'completed' ? 'line-through' : 'none', opacity: item.status === 'completed' ? 0.6 : 1 }}>
+                      {item.title}
+                    </h4>
+                    <p>{item.context} · {item.time}</p>
+                  </div>
                 </div>
-                <div className="atrium-priority-info">
-                  <h4 style={{ textDecoration: item.status === 'completed' ? 'line-through' : 'none', opacity: item.status === 'completed' ? 0.6 : 1 }}>
-                    {item.title}
-                  </h4>
-                  <p>{item.context} · {item.time}</p>
-                </div>
-              </div>
 
-              <div className="atrium-priority-actions">
-                <span style={{
-                  fontSize: '0.6875rem',
-                  fontWeight: 700,
-                  padding: '0.2rem 0.6rem',
-                  borderRadius: '9999px',
-                  backgroundColor: item.status === 'completed' ? '#DCFCE7' : (item.status === 'overdue' ? '#FEE2E2' : '#F1F0F4'),
-                  color: item.status === 'completed' ? '#15803D' : (item.status === 'overdue' ? '#991B1B' : '#475569')
-                }}>
-                  {item.statusLabel}
-                </span>
-                <button
-                  type="button"
-                  className="atrium-btn-light"
-                  style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
-                  onClick={() => navigate('/penitipan-baru')}
-                >
-                  Buka
-                </button>
+                <div className="atrium-priority-actions">
+                  <span style={{
+                    fontSize: '0.6875rem',
+                    fontWeight: 700,
+                    padding: '0.2rem 0.6rem',
+                    borderRadius: '9999px',
+                    backgroundColor: item.status === 'completed' ? '#DCFCE7' : (item.status === 'overdue' ? '#FEE2E2' : '#F1F0F4'),
+                    color: item.status === 'completed' ? '#15803D' : (item.status === 'overdue' ? '#991B1B' : '#475569')
+                  }}>
+                    {item.statusLabel}
+                  </span>
+                  <button
+                    type="button"
+                    className="atrium-btn-light"
+                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.75rem' }}
+                    onClick={() => navigate('/peminjaman')}
+                  >
+                    Buka
+                  </button>
+                </div>
               </div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem', color: 'var(--atrium-text-muted)', fontSize: '0.8125rem' }}>
+              <p style={{ margin: 0, fontWeight: 600, color: 'var(--atrium-text-primary)' }}>
+                Belum Ada Prioritas Operasional
+              </p>
+              <span>Seluruh transaksi peminjaman terselesaikan atau belum ada transaksi tercatat.</span>
             </div>
-          ))}
+          )}
         </div>
       </section>
 
@@ -567,7 +690,7 @@ export default function Dashboard() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
           <div>
             <h3 style={{ fontSize: '1rem', fontWeight: 700, margin: 0, color: 'var(--atrium-text-primary)' }}>
-              {isAdmin ? 'Pengawasan & Petugas Gudang' : 'Tindakan Cepat Operasional'}
+              {isAdmin ? 'Pengawasan & Staf Gudang' : 'Tindakan Cepat Operasional'}
             </h3>
             <p style={{ fontSize: '0.75rem', color: 'var(--atrium-text-muted)', margin: '0.2rem 0 0 0' }}>
               {isAdmin ? 'Akses manajemen staf dan modul otorisasi' : 'Pintasan tugas harian penjaga gudang'}
@@ -599,7 +722,7 @@ export default function Dashboard() {
               borderRadius: '16px',
               textAlign: 'left'
             }}
-            onClick={() => navigate('/penitipan-baru')}
+            onClick={() => navigate('/peminjaman')}
           >
             <div style={{
               width: '32px',
@@ -629,7 +752,7 @@ export default function Dashboard() {
               borderRadius: '16px',
               textAlign: 'left'
             }}
-            onClick={() => navigate('/pengambilan')}
+            onClick={() => navigate('/pengembalian')}
           >
             <div style={{
               width: '32px',
@@ -649,7 +772,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Recent Activity Mini List */}
+        {/* Recent Activity List from Real Database */}
         <div>
           <span style={{
             fontSize: '0.6875rem',
@@ -660,30 +783,36 @@ export default function Dashboard() {
             display: 'block',
             marginBottom: '0.5rem'
           }}>
-            Aktivitas Terakhir
+            Aktivitas Terakhir Database
           </span>
 
-          {recentTransactions.map((tx) => (
-            <div key={tx.id} className="atrium-activity-item">
-              <div className="atrium-activity-avatar">
-                {tx.borrowerName.charAt(0)}
+          {recentTransactions.length > 0 ? (
+            recentTransactions.slice(0, 3).map((tx) => (
+              <div key={tx.id} className="atrium-activity-item">
+                <div className="atrium-activity-avatar">
+                  {(tx.borrowers?.full_name || 'P').charAt(0).toUpperCase()}
+                </div>
+                <div className="atrium-activity-meta">
+                  <p>{tx.borrowers?.full_name || 'Peminjam'} · <span style={{ fontWeight: 400, color: 'var(--atrium-text-secondary)' }}>{tx.borrowers?.department || 'Karyawan'}</span></p>
+                  <span>#{tx.transaction_code} · {tx.borrowed_at ? new Date(tx.borrowed_at).toLocaleDateString('id-ID') : 'Hari ini'}</span>
+                </div>
+                <span style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 600,
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '6px',
+                  backgroundColor: tx.status === 'borrowed' ? '#EFF6FF' : (tx.status === 'overdue' ? '#FEE2E2' : '#DCFCE7'),
+                  color: tx.status === 'borrowed' ? '#1D4ED8' : (tx.status === 'overdue' ? '#991B1B' : '#15803D')
+                }}>
+                  {tx.status === 'borrowed' ? 'Dipinjam' : (tx.status === 'overdue' ? 'Terlambat' : (tx.status === 'partial_returned' ? 'Parsial' : 'Selesai'))}
+                </span>
               </div>
-              <div className="atrium-activity-meta">
-                <p>{tx.borrowerName} · <span style={{ fontWeight: 400, color: 'var(--atrium-text-secondary)' }}>{tx.itemSummary}</span></p>
-                <span>{tx.code} · {tx.time}</span>
-              </div>
-              <span style={{
-                fontSize: '0.6875rem',
-                fontWeight: 600,
-                padding: '0.15rem 0.5rem',
-                borderRadius: '6px',
-                backgroundColor: tx.status === 'borrowed' ? '#EFF6FF' : (tx.status === 'overdue' ? '#FEE2E2' : '#DCFCE7'),
-                color: tx.status === 'borrowed' ? '#1D4ED8' : (tx.status === 'overdue' ? '#991B1B' : '#15803D')
-              }}>
-                {tx.status === 'borrowed' ? 'Dipinjam' : (tx.status === 'overdue' ? 'Terlambat' : 'Selesai')}
-              </span>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--atrium-text-muted)', fontSize: '0.75rem' }}>
+              Belum ada riwayat transaksi peminjaman tercatat di database.
             </div>
-          ))}
+          )}
         </div>
       </section>
     </div>

@@ -8,7 +8,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar() {
-  const { profile, isAdmin, signOut } = useAuth();
+  const { profile, isAdmin } = useAuth();
 
   const userInitial = profile?.full_name
     ? profile.full_name.charAt(0).toUpperCase()
@@ -34,54 +34,34 @@ export default function Sidebar() {
           <span className="atrium-tooltip">Dashboard</span>
         </NavLink>
 
+        {/* Future Module — Phase E */}
         <NavLink
-          to="/barang-dititipkan"
+          to="/inventaris"
           className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
           aria-label="Inventaris Gudang"
         >
           <Boxes size={20} />
-          <span className="atrium-tooltip">Inventaris Gudang</span>
+          <span className="atrium-tooltip">Inventaris Gudang (Phase E)</span>
         </NavLink>
 
-        {/* Admin or Keeper accessible routes */}
-        {isAdmin ? (
-          <>
-            <NavLink
-              to="/kategori-barang"
-              className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
-              aria-label="Kategori Barang"
-            >
-              <Tag size={20} />
-              <span className="atrium-tooltip">Kategori Barang</span>
-            </NavLink>
-
-            <NavLink
-              to="/lokasi-penyimpanan"
-              className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
-              aria-label="Lokasi Penyimpanan"
-            >
-              <MapPin size={20} />
-              <span className="atrium-tooltip">Lokasi Penyimpanan</span>
-            </NavLink>
-          </>
-        ) : null}
-
+        {/* Future Module — Phase F */}
         <NavLink
-          to="/pengunjung"
+          to="/peminjam"
           className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
           aria-label="Direktori Peminjam"
         >
           <Users size={20} />
-          <span className="atrium-tooltip">Direktori Peminjam</span>
+          <span className="atrium-tooltip">Direktori Peminjam (Phase F)</span>
         </NavLink>
 
+        {/* Future Module — Phase F */}
         <NavLink
-          to="/penitipan-baru"
+          to="/peminjaman"
           className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
           aria-label="Peminjaman & Pengembalian"
         >
           <ArrowLeftRight size={20} />
-          <span className="atrium-tooltip">Peminjaman & Pengembalian</span>
+          <span className="atrium-tooltip">Peminjaman & Pengembalian (Phase F)</span>
         </NavLink>
 
         <NavLink
@@ -96,22 +76,24 @@ export default function Sidebar() {
         {/* Admin-only Modules */}
         {isAdmin && (
           <>
+            {/* Future Module — Phase G */}
             <NavLink
               to="/laporan"
               className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
               aria-label="Laporan Manajemen"
             >
               <BarChart3 size={20} />
-              <span className="atrium-tooltip">Laporan Gudang</span>
+              <span className="atrium-tooltip">Laporan Gudang (Phase G)</span>
             </NavLink>
 
+            {/* Phase C — Active Account Management */}
             <NavLink
               to="/manajemen-petugas"
               className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
               aria-label="Manajemen Petugas"
             >
               <UserCog size={20} />
-              <span className="atrium-tooltip">Manajemen Petugas</span>
+              <span className="atrium-tooltip">Manajemen Petugas (Aktif)</span>
             </NavLink>
           </>
         )}
