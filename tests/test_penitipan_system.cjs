@@ -158,6 +158,10 @@ function runTests() {
   // Jalankan Suite Pengujian Manajemen Akun Penjaga Gudang (Phase C)
   const { runPhaseCTests } = require('./test_phase_c_account_management.cjs');
   runPhaseCTests();
+
+  // Jalankan Suite Pengujian Phase D (UI & Auth Refactor)
+  const { runPhaseDTests } = require('./test_phase_d_ui_auth.cjs');
+  runPhaseDTests();
 }
 
 runTests();

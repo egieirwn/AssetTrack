@@ -86,14 +86,22 @@ export const AuthProvider = ({ children }) => {
 
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       if (!mounted) return;
       setSession(currentSession);
       setUser(currentSession?.user || null);
       if (currentSession?.user) {
-        fetchProfile(currentSession.user.id, currentSession.user.user_metadata).finally(() => {
+        try {
+          const userProf = await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
+          if (mounted && userProf && userProf.is_active === false) {
+            await supabase.auth.signOut();
+            setSession(null);
+            setUser(null);
+            setProfile(null);
+          }
+        } finally {
           if (mounted) setLoading(false);
-        });
+        }
       } else {
         setLoading(false);
       }
@@ -104,7 +112,13 @@ export const AuthProvider = ({ children }) => {
       setSession(currentSession);
       setUser(currentSession?.user || null);
       if (currentSession?.user) {
-        await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
+        const userProf = await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
+        if (mounted && userProf && userProf.is_active === false) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        }
       } else {
         setProfile(null);
       }
@@ -142,7 +156,7 @@ export const AuthProvider = ({ children }) => {
         setSession(null);
         setUser(null);
         setProfile(null);
-        return { data: null, error: new Error('Akun Anda telah dinonaktifkan. Hubungi Administrator.') };
+        return { data: null, error: new Error('Akun Anda telah dinonaktifkan oleh Administrator PT Vinix Seven Aurum. Silakan hubungi Administrator.') };
       }
     }
     return { data, error };

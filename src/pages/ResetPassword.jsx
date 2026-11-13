@@ -86,7 +86,7 @@ export default function ResetPassword() {
           <Shield size={20} />
         </div>
         <span style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>
-          <strong>SiPenitip</strong> · Sistem Informasi Penitipan Barang Pengunjung
+          <strong>SiPenitip</strong> · PT Vinix Seven Aurum — Warehouse Management System
         </span>
       </header>
 

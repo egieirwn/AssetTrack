@@ -45,10 +45,14 @@ export default function App() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/penitipan-baru" element={<NewDeposit />} />
+        <Route path="/peminjaman" element={<NewDeposit />} />
         <Route path="/kartu-penitipan" element={<DepositCard />} />
         <Route path="/barang-dititipkan" element={<ActiveDeposits />} />
+        <Route path="/inventaris" element={<ActiveDeposits />} />
         <Route path="/pengambilan" element={<Pickup />} />
+        <Route path="/pengembalian" element={<Pickup />} />
         <Route path="/pengunjung" element={<Visitors />} />
+        <Route path="/peminjam" element={<Visitors />} />
         <Route path="/riwayat" element={<DepositHistory />} />
         <Route path="/profil" element={<Profile />} />
 

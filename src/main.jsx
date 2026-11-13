@@ -6,6 +6,7 @@ import { ToastProvider } from './components/common/Toast';
 import { AuthProvider } from './context/AuthContext';
 import './index.css';
 import './deposit-system.css';
+import './atrium-theme.css';
 
 // Inisialisasi Microsoft Clarity hanya saat live di production & jika Project ID tersedia
 const clarityId = import.meta.env.VITE_CLARITY_ID;

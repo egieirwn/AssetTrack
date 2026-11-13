@@ -5,11 +5,11 @@ import Navbar from '../components/layout/Navbar';
 
 export default function MainLayout() {
   return (
-    <div className="app-layout">
+    <div className="atrium-layout">
       <Sidebar />
-      <div className="main-content-wrapper">
+      <div className="atrium-main-wrapper">
         <Navbar />
-        <main className="page-container">
+        <main className="atrium-content-area" role="main">
           <Outlet />
         </main>
       </div>

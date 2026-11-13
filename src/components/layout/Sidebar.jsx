@@ -1,94 +1,140 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard, PackagePlus, Archive, PackageOpen,
-  Users, ClipboardList, Tag, MapPin, UserCog,
-  BarChart3, Settings, User, ChevronDown, ChevronRight,
-  Shield
+  LayoutDashboard, Boxes, Tag, MapPin, Users,
+  ArrowLeftRight, BarChart3, UserCog, User,
+  Shield, History
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
-const NavSection = ({ label, children }) => (
-  <div className="nav-section">
-    <span className="nav-section-label">{label}</span>
-    {children}
-  </div>
-);
-
-const NavItem = ({ to, icon: Icon, label }) => (
-  <NavLink
-    to={to}
-    className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}
-  >
-    <Icon size={18} />
-    <span>{label}</span>
-  </NavLink>
-);
-
 export default function Sidebar() {
   const { profile, isAdmin, signOut } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+
+  const userInitial = profile?.full_name
+    ? profile.full_name.charAt(0).toUpperCase()
+    : 'U';
+
+  const userRoleLabel = profile?.role === 'admin' ? 'Administrator' : 'Penjaga Gudang';
 
   return (
-    <aside className={`sidebar${collapsed ? ' collapsed' : ''}`} aria-label="Navigasi utama">
-      <div className="sidebar-logo">
-        <div className="logo-badge">
-          <Shield size={18} />
-        </div>
-        {!collapsed && (
-          <div className="logo-text">
-            <h2>SiPenitip</h2>
-            <span>PT Vinix Seven Aurum</span>
-          </div>
-        )}
-      </div>
+    <aside className="atrium-sidebar" aria-label="Navigasi Utama Gudang">
+      {/* Brand Icon Badge */}
+      <NavLink to="/dashboard" className="atrium-sidebar-logo" title="SiPenitip · PT Vinix Seven Aurum">
+        <Shield size={22} />
+      </NavLink>
 
-      <nav className="sidebar-nav">
-        <NavSection label="Overview">
-          <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-        </NavSection>
+      {/* Nav Rail Icons */}
+      <nav className="atrium-nav-rail">
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Dashboard"
+        >
+          <LayoutDashboard size={20} />
+          <span className="atrium-tooltip">Dashboard</span>
+        </NavLink>
 
-        <NavSection label="Operasional">
-          <NavItem to="/penitipan-baru" icon={PackagePlus} label="Penitipan Baru" />
-          <NavItem to="/barang-dititipkan" icon={Archive} label="Barang Dititipkan" />
-          <NavItem to="/pengambilan" icon={PackageOpen} label="Pengambilan Barang" />
-        </NavSection>
+        <NavLink
+          to="/barang-dititipkan"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Inventaris Gudang"
+        >
+          <Boxes size={20} />
+          <span className="atrium-tooltip">Inventaris Gudang</span>
+        </NavLink>
 
-        <NavSection label="Data">
-          <NavItem to="/pengunjung" icon={Users} label="Data Pengunjung" />
-          <NavItem to="/riwayat" icon={ClipboardList} label="Riwayat Penitipan" />
-        </NavSection>
+        {/* Admin or Keeper accessible routes */}
+        {isAdmin ? (
+          <>
+            <NavLink
+              to="/kategori-barang"
+              className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+              aria-label="Kategori Barang"
+            >
+              <Tag size={20} />
+              <span className="atrium-tooltip">Kategori Barang</span>
+            </NavLink>
 
+            <NavLink
+              to="/lokasi-penyimpanan"
+              className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+              aria-label="Lokasi Penyimpanan"
+            >
+              <MapPin size={20} />
+              <span className="atrium-tooltip">Lokasi Penyimpanan</span>
+            </NavLink>
+          </>
+        ) : null}
+
+        <NavLink
+          to="/pengunjung"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Direktori Peminjam"
+        >
+          <Users size={20} />
+          <span className="atrium-tooltip">Direktori Peminjam</span>
+        </NavLink>
+
+        <NavLink
+          to="/penitipan-baru"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Peminjaman & Pengembalian"
+        >
+          <ArrowLeftRight size={20} />
+          <span className="atrium-tooltip">Peminjaman & Pengembalian</span>
+        </NavLink>
+
+        <NavLink
+          to="/riwayat"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Riwayat Operasional"
+        >
+          <History size={20} />
+          <span className="atrium-tooltip">Riwayat Transaksi</span>
+        </NavLink>
+
+        {/* Admin-only Modules */}
         {isAdmin && (
           <>
-            <NavSection label="Manajemen">
-              <NavItem to="/kategori-barang" icon={Tag} label="Kategori Barang" />
-              <NavItem to="/lokasi-penyimpanan" icon={MapPin} label="Lokasi Penyimpanan" />
-              <NavItem to="/manajemen-petugas" icon={UserCog} label="Manajemen Petugas" />
-            </NavSection>
+            <NavLink
+              to="/laporan"
+              className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+              aria-label="Laporan Manajemen"
+            >
+              <BarChart3 size={20} />
+              <span className="atrium-tooltip">Laporan Gudang</span>
+            </NavLink>
 
-            <NavSection label="Pelaporan">
-              <NavItem to="/laporan" icon={BarChart3} label="Laporan Penitipan" />
-            </NavSection>
+            <NavLink
+              to="/manajemen-petugas"
+              className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+              aria-label="Manajemen Petugas"
+            >
+              <UserCog size={20} />
+              <span className="atrium-tooltip">Manajemen Petugas</span>
+            </NavLink>
           </>
         )}
 
-        <NavSection label="Pengaturan">
-          <NavItem to="/profil" icon={User} label="Profil Saya" />
-          {isAdmin && <NavItem to="/pengaturan" icon={Settings} label="Pengaturan Sistem" />}
-        </NavSection>
+        <NavLink
+          to="/profil"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Profil Pengguna"
+        >
+          <User size={20} />
+          <span className="atrium-tooltip">Profil Saya</span>
+        </NavLink>
       </nav>
 
-      <div className="sidebar-user-info">
-        <div className="user-avatar-sm">
-          {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
-        </div>
-        <div className="user-meta-sm">
-          <p className="user-name-sm">{profile?.full_name || 'Pengguna'}</p>
-          <span className={`role-badge role-${profile?.role}`}>
-            {profile?.role === 'admin' ? 'Administrator' : 'Penjaga Gudang'}
-          </span>
-        </div>
+      {/* Footer User Avatar */}
+      <div className="atrium-sidebar-footer">
+        <NavLink
+          to="/profil"
+          className="atrium-user-trigger"
+          title={`${profile?.full_name || 'Petugas'} (${userRoleLabel})`}
+        >
+          {userInitial}
+        </NavLink>
       </div>
     </aside>
   );
