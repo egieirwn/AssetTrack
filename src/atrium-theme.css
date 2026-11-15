@@ -887,16 +887,282 @@
   transform: none;
 }
 
+/* --------------------------------------------------------------------------
+   Inventory & Administrative Module Components (Phase E)
+   -------------------------------------------------------------------------- */
+
+.atrium-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.atrium-page-title-wrap h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--atrium-text-primary);
+  letter-spacing: -0.025em;
+  margin: 0 0 0.25rem 0;
+}
+
+.atrium-page-title-wrap p {
+  font-size: 0.875rem;
+  color: var(--atrium-text-secondary);
+  margin: 0;
+}
+
+.atrium-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.atrium-stat-widget {
+  background-color: var(--atrium-card-bg);
+  border: 1px solid var(--atrium-card-border);
+  border-radius: var(--atrium-card-radius-sm);
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.atrium-stat-widget:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.04);
+}
+
+.atrium-stat-widget-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--atrium-text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.atrium-stat-widget-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--atrium-text-primary);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.atrium-stat-widget-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--atrium-text-secondary);
+  margin-top: 0.35rem;
+}
+
+.atrium-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.atrium-filter-select {
+  height: 42px;
+  border-radius: var(--atrium-card-radius-pill);
+  border: 1px solid var(--atrium-border-soft);
+  background-color: var(--atrium-card-bg);
+  padding: 0 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--atrium-text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.atrium-filter-select:focus {
+  border-color: var(--atrium-accent-dark);
+}
+
+/* Modern Data Table */
+.atrium-table-card {
+  background-color: var(--atrium-card-bg);
+  border-radius: var(--atrium-card-radius);
+  border: 1px solid var(--atrium-card-border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.atrium-table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.atrium-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.atrium-table th {
+  background-color: #FAF9FB;
+  padding: 0.875rem 1.25rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--atrium-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--atrium-border-soft);
+  white-space: nowrap;
+}
+
+.atrium-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #F1F0F4;
+  color: var(--atrium-text-primary);
+  vertical-align: middle;
+}
+
+.atrium-table tr:last-child td {
+  border-bottom: none;
+}
+
+.atrium-table tr:hover td {
+  background-color: #FAFAFC;
+}
+
+/* Pills & Badges */
+.atrium-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--atrium-card-radius-pill);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.atrium-pill-available {
+  background-color: #DCFCE7;
+  color: #15803D;
+}
+
+.atrium-pill-borrowed {
+  background-color: #EFF6FF;
+  color: #1D4ED8;
+}
+
+.atrium-pill-maintenance {
+  background-color: #FEF3C7;
+  color: #B45309;
+}
+
+.atrium-pill-inactive {
+  background-color: #F1F5F9;
+  color: #64748B;
+}
+
+.atrium-pill-individual {
+  background-color: #EDE9FE;
+  color: #6D28D9;
+}
+
+.atrium-pill-quantity {
+  background-color: #E0F2FE;
+  color: #0369A1;
+}
+
+/* Movement types badges */
+.atrium-movement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.movement-initial { background-color: #E2E8F0; color: #334155; }
+.movement-incoming { background-color: #DCFCE7; color: #166534; }
+.movement-borrow_out { background-color: #EFF6FF; color: #1E40AF; }
+.movement-return_good { background-color: #ECFDF5; color: #065F46; }
+.movement-return_damaged { background-color: #FEF2F2; color: #991B1B; }
+.movement-sent_to_repair { background-color: #FFFBEB; color: #92400E; }
+.movement-repair_complete { background-color: #F0FDF4; color: #15803D; }
+.movement-adjustment { background-color: #F5F3FF; color: #5B21B6; }
+.movement-write_off { background-color: #FEE2E2; color: #B91C1C; }
+
+/* Form styles */
+.atrium-form-card {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.atrium-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+}
+
+.atrium-form-grid-full {
+  grid-column: span 2;
+}
+
+.atrium-diff-box {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--atrium-card-radius-sm);
+  padding: 1.25rem;
+  margin: 1.25rem 0;
+}
+
+.atrium-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  text-align: center;
+}
+
+.atrium-diff-col h5 {
+  font-size: 0.75rem;
+  color: var(--atrium-text-muted);
+  text-transform: uppercase;
+  margin: 0 0 0.4rem 0;
+}
+
+.atrium-diff-val {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--atrium-text-primary);
+}
+
+.atrium-diff-arrow {
+  color: var(--atrium-text-muted);
+  font-size: 0.875rem;
+  margin: 0 0.35rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
-  .col-span-8, .col-span-7, .col-span-6, .col-span-5, .col-span-4, .col-span-3 {
-    grid-column: span 12;
+  .atrium-form-grid {
+    grid-template-columns: 1fr;
   }
-
-  .atrium-main-wrapper {
-    padding: 1rem 1rem 2rem 1rem;
+  .atrium-form-grid-full {
+    grid-column: span 1;
+  }
+  .atrium-diff-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
+
 
 @media (max-width: 768px) {
   .atrium-layout {

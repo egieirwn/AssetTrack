@@ -34,14 +34,34 @@ export default function Sidebar() {
           <span className="atrium-tooltip">Dashboard</span>
         </NavLink>
 
-        {/* Future Module — Phase E */}
+        {/* Inventory Module — Phase E (Active) */}
         <NavLink
           to="/inventaris"
           className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
           aria-label="Inventaris Gudang"
         >
           <Boxes size={20} />
-          <span className="atrium-tooltip">Inventaris Gudang (Phase E)</span>
+          <span className="atrium-tooltip">Inventaris Gudang</span>
+        </NavLink>
+
+        {/* Master Categories — Phase E (Active) */}
+        <NavLink
+          to="/kategori-barang"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Kategori Barang"
+        >
+          <Tag size={20} />
+          <span className="atrium-tooltip">Kategori Barang</span>
+        </NavLink>
+
+        {/* Master Locations — Phase E (Active) */}
+        <NavLink
+          to="/lokasi-penyimpanan"
+          className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
+          aria-label="Lokasi Penyimpanan"
+        >
+          <MapPin size={20} />
+          <span className="atrium-tooltip">Lokasi Penyimpanan</span>
         </NavLink>
 
         {/* Future Module — Phase F */}

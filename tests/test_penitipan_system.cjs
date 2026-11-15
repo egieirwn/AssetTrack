@@ -162,6 +162,10 @@ function runTests() {
   // Jalankan Suite Pengujian Phase D (UI & Auth Refactor)
   const { runPhaseDTests } = require('./test_phase_d_ui_auth.cjs');
   runPhaseDTests();
+
+  // Jalankan Suite Pengujian Phase E (Warehouse Inventory Management)
+  const { runPhaseETests } = require('./test_phase_e_inventory.cjs');
+  runPhaseETests();
 }
 
 runTests();

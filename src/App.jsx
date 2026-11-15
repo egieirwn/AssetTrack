@@ -19,11 +19,21 @@ import Visitors from './pages/Visitors';
 import DepositHistory from './pages/DepositHistory';
 import Profile from './pages/Profile';
 
+// Inventory Pages (Phase E)
+import InventoryList from './pages/inventory/InventoryList';
+import ItemForm from './pages/inventory/ItemForm';
+import ItemDetail from './pages/inventory/ItemDetail';
+import IncomingStock from './pages/inventory/IncomingStock';
+import StockAdjustment from './pages/inventory/StockAdjustment';
+import StockMovementHistory from './pages/inventory/StockMovementHistory';
+
+// Master Data Pages
+import ItemCategories from './pages/admin/ItemCategories';
+import StorageLocations from './pages/admin/StorageLocations';
+
 import FutureModulePlaceholder from './components/common/FutureModulePlaceholder';
 
 // Admin Pages
-import ItemCategories from './pages/admin/ItemCategories';
-import StorageLocations from './pages/admin/StorageLocations';
 import StaffManagement from './pages/admin/StaffManagement';
 import Reports from './pages/admin/Reports';
 
@@ -47,11 +57,23 @@ export default function App() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         
-        {/* Modul Gudang Baru (Future Modules - Phase E & Phase F) */}
-        <Route path="/inventaris" element={<FutureModulePlaceholder pathOverride="/inventaris" />} />
+        {/* Modul Inventaris Gudang (Phase E - Active) */}
+        <Route path="/inventaris" element={<InventoryList />} />
+        <Route path="/inventaris/tambah" element={<ItemForm />} />
+        <Route path="/inventaris/:id" element={<ItemDetail />} />
+        <Route path="/inventaris/:id/edit" element={<ItemForm />} />
+        <Route path="/inventaris/barang-masuk" element={<IncomingStock />} />
+        <Route path="/inventaris/penyesuaian-stok" element={<StockAdjustment />} />
+        <Route path="/inventaris/pergerakan-stok" element={<StockMovementHistory />} />
+
+        {/* Master Data Kategori & Lokasi (Phase E - Active) */}
+        <Route path="/kategori-barang" element={<ItemCategories />} />
+        <Route path="/lokasi-penyimpanan" element={<StorageLocations />} />
+
+        {/* Modul Transaksi Peminjaman (Phase F - Future Module Placeholder) */}
+        <Route path="/peminjam" element={<FutureModulePlaceholder pathOverride="/peminjam" />} />
         <Route path="/peminjaman" element={<FutureModulePlaceholder pathOverride="/peminjaman" />} />
         <Route path="/pengembalian" element={<FutureModulePlaceholder pathOverride="/pengembalian" />} />
-        <Route path="/peminjam" element={<FutureModulePlaceholder pathOverride="/peminjam" />} />
 
         {/* Legacy Deposit Routes (Preserved for Historical Audit) */}
         <Route path="/penitipan-baru" element={<NewDeposit />} />
@@ -63,12 +85,6 @@ export default function App() {
         <Route path="/profil" element={<Profile />} />
 
         {/* Admin Only */}
-        <Route path="/kategori-barang" element={
-          <ProtectedRoute allowedRoles={['admin']}><ItemCategories /></ProtectedRoute>
-        } />
-        <Route path="/lokasi-penyimpanan" element={
-          <ProtectedRoute allowedRoles={['admin']}><StorageLocations /></ProtectedRoute>
-        } />
         <Route path="/manajemen-petugas" element={
           <ProtectedRoute allowedRoles={['admin']}><StaffManagement /></ProtectedRoute>
         } />
