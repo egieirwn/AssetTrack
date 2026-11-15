@@ -113,26 +113,71 @@ function runTests() {
     assert.strictEqual(isValidStatus('DIPINJAM'), false); // status sistem lama tidak valid
   });
 
-  // 8. Otorisasi Role Petugas
-  test('Sistem hanya mengenali role satpam dan admin', () => {
+  // 8. Otorisasi Role Petugas (Phase A Migration)
+  test('Sistem hanya mengenali role warehouse_keeper dan admin', () => {
     function isValidRole(role) {
-      return ['satpam', 'admin'].includes(role);
+      return ['warehouse_keeper', 'admin'].includes(role);
     }
 
-    assert.strictEqual(isValidRole('satpam'), true);
+    assert.strictEqual(isValidRole('warehouse_keeper'), true);
     assert.strictEqual(isValidRole('admin'), true);
+    assert.strictEqual(isValidRole('satpam'), false); // role lama sudah dimigrasi
     assert.strictEqual(isValidRole('mahasiswa'), false);
     assert.strictEqual(isValidRole('dosen'), false);
     assert.strictEqual(isValidRole('superadmin'), false);
   });
 
   console.log(`\n========================================`);
-  console.log(`Hasil Pengujian: ${passed} Lulus, ${failed} Gagal`);
+  console.log(`Hasil Pengujian Baseline: ${passed} Lulus, ${failed} Gagal`);
   console.log(`========================================\n`);
 
   if (failed > 0) {
     process.exit(1);
   }
+
+  // Jalankan Suite Pengujian Keamanan & Migrasi Role (Phase A)
+  const { runSecurityTests } = require('./test_phase_a_security.cjs');
+  runSecurityTests();
+
+  // Jalankan Suite Pengujian Skema Gudang & Peminjaman (Phase B)
+  const { runPhaseBTests } = require('./test_phase_b_schema.cjs');
+  runPhaseBTests();
+
+  // Jalankan Suite Pengujian Keamanan & Integritas Transaksi (Phase B.1)
+  const { runPhaseB1Tests } = require('./test_phase_b1_integrity.cjs');
+  runPhaseB1Tests();
+
+  // Jalankan Suite Verifikasi Final Keamanan SQL & Database (Phase B.2)
+  const { runPhaseB2Tests } = require('./test_phase_b2_verification.cjs');
+  runPhaseB2Tests();
+
+  // Jalankan Suite Guardrail Keamanan Test Harness Staging
+  const { runHarnessSafetyTests } = require('./test_harness_safety.cjs');
+  runHarnessSafetyTests();
+
+  // Jalankan Suite Pengujian Manajemen Akun Penjaga Gudang (Phase C)
+  const { runPhaseCTests } = require('./test_phase_c_account_management.cjs');
+  runPhaseCTests();
+
+  // Jalankan Suite Pengujian Phase D (UI & Auth Refactor)
+  const { runPhaseDTests } = require('./test_phase_d_ui_auth.cjs');
+  runPhaseDTests();
+
+  // Jalankan Suite Pengujian Phase E (Warehouse Inventory Management)
+  const { runPhaseETests } = require('./test_phase_e_inventory.cjs');
+  runPhaseETests();
+
+  // Jalankan Suite Pengujian Phase F (Borrowing & Return Management)
+  const { runPhaseFTests } = require('./test_phase_f_borrowing.cjs');
+  runPhaseFTests();
+
+  // Jalankan Suite Pengujian Phase G (Reports & Final Verification)
+  const { runPhaseGTests } = require('./test_phase_g_reports.cjs');
+  runPhaseGTests();
+
+  // Jalankan Suite Pengujian Penyesuaian Email Confirmation & Approval Policy
+  const { runAuthEmailConfirmationAdjustmentTests } = require('./test_auth_email_confirmation_adjustment.cjs');
+  runAuthEmailConfirmationAdjustmentTests();
 }
 
 runTests();

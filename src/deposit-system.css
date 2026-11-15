@@ -686,6 +686,7 @@
   color: #991B1B;
 }
 
+.role-badge.role-warehouse_keeper,
 .role-badge.role-satpam {
   background: var(--color-primary-light, #DBEAFE);
   color: var(--color-primary);

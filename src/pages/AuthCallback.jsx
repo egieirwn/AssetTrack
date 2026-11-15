@@ -40,7 +40,12 @@ export default function AuthCallback() {
           const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
             if (currentSession?.user) {
               subscription.unsubscribe();
-              await refreshProfile();
+              const prof = await refreshProfile();
+              if (!prof || prof.is_active !== true) {
+                toast.warning('Akun Anda sedang menunggu persetujuan aktivasi dari Administrator.');
+                navigate('/login', { replace: true });
+                return;
+              }
               toast.success('Autentikasi berhasil! Selamat datang.');
               navigate('/dashboard', { replace: true });
             }
@@ -54,7 +59,12 @@ export default function AuthCallback() {
           return;
         }
 
-        await refreshProfile();
+        const prof = await refreshProfile();
+        if (!prof || prof.is_active !== true) {
+          toast.warning('Akun Anda sedang menunggu persetujuan aktivasi dari Administrator.');
+          navigate('/login', { replace: true });
+          return;
+        }
         toast.success('Autentikasi berhasil! Selamat datang.');
         navigate('/dashboard', { replace: true });
       } catch (err) {

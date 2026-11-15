@@ -19,11 +19,28 @@ import Visitors from './pages/Visitors';
 import DepositHistory from './pages/DepositHistory';
 import Profile from './pages/Profile';
 
-// Admin Pages
+// Inventory Pages (Phase E)
+import InventoryList from './pages/inventory/InventoryList';
+import ItemForm from './pages/inventory/ItemForm';
+import ItemDetail from './pages/inventory/ItemDetail';
+import IncomingStock from './pages/inventory/IncomingStock';
+import StockAdjustment from './pages/inventory/StockAdjustment';
+import StockMovementHistory from './pages/inventory/StockMovementHistory';
+
+// Master Data Pages
 import ItemCategories from './pages/admin/ItemCategories';
 import StorageLocations from './pages/admin/StorageLocations';
+
+// Borrowing & Return Pages (Phase F)
+import BorrowerList from './pages/borrowing/BorrowerList';
+import BorrowingList from './pages/borrowing/BorrowingList';
+import CreateBorrowing from './pages/borrowing/CreateBorrowing';
+import BorrowingDetail from './pages/borrowing/BorrowingDetail';
+import ReturnProcessing from './pages/borrowing/ReturnProcessing';
+
+// Admin Pages
 import StaffManagement from './pages/admin/StaffManagement';
-import Reports from './pages/admin/Reports';
+import ReportsManagement from './pages/reports/ReportsManagement';
 
 export default function App() {
   return (
@@ -44,6 +61,29 @@ export default function App() {
         }
       >
         <Route path="/dashboard" element={<Dashboard />} />
+        
+        {/* Modul Inventaris Gudang (Phase E - Active) */}
+        <Route path="/inventaris" element={<InventoryList />} />
+        <Route path="/inventaris/tambah" element={<ItemForm />} />
+        <Route path="/inventaris/:id" element={<ItemDetail />} />
+        <Route path="/inventaris/:id/edit" element={<ItemForm />} />
+        <Route path="/inventaris/barang-masuk" element={<IncomingStock />} />
+        <Route path="/inventaris/penyesuaian-stok" element={<StockAdjustment />} />
+        <Route path="/inventaris/pergerakan-stok" element={<StockMovementHistory />} />
+
+        {/* Master Data Kategori & Lokasi (Phase E - Active) */}
+        <Route path="/kategori-barang" element={<ItemCategories />} />
+        <Route path="/lokasi-penyimpanan" element={<StorageLocations />} />
+
+        {/* Modul Peminjaman & Pengembalian (Phase F - Active) */}
+        <Route path="/peminjam" element={<BorrowerList />} />
+        <Route path="/peminjaman" element={<BorrowingList />} />
+        <Route path="/peminjaman/tambah" element={<CreateBorrowing />} />
+        <Route path="/peminjaman/:id" element={<BorrowingDetail />} />
+        <Route path="/peminjaman/:id/pengembalian" element={<ReturnProcessing />} />
+        <Route path="/pengembalian" element={<ReturnProcessing />} />
+
+        {/* Legacy Deposit Routes (Preserved for Historical Audit) */}
         <Route path="/penitipan-baru" element={<NewDeposit />} />
         <Route path="/kartu-penitipan" element={<DepositCard />} />
         <Route path="/barang-dititipkan" element={<ActiveDeposits />} />
@@ -53,17 +93,11 @@ export default function App() {
         <Route path="/profil" element={<Profile />} />
 
         {/* Admin Only */}
-        <Route path="/kategori-barang" element={
-          <ProtectedRoute allowedRoles={['admin']}><ItemCategories /></ProtectedRoute>
-        } />
-        <Route path="/lokasi-penyimpanan" element={
-          <ProtectedRoute allowedRoles={['admin']}><StorageLocations /></ProtectedRoute>
-        } />
         <Route path="/manajemen-petugas" element={
           <ProtectedRoute allowedRoles={['admin']}><StaffManagement /></ProtectedRoute>
         } />
         <Route path="/laporan" element={
-          <ProtectedRoute allowedRoles={['admin']}><Reports /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['admin']}><ReportsManagement /></ProtectedRoute>
         } />
       </Route>
 

@@ -78,11 +78,11 @@ export default function Profile() {
               color: profile?.role === 'admin' ? '#991B1B' : 'var(--color-primary)'
             }}>
               <Shield size={12} />
-              {profile?.role === 'admin' ? 'Administrator' : 'Petugas Keamanan (Satpam)'}
+              {profile?.role === 'admin' ? 'Administrator' : 'Penjaga Gudang'}
             </span>
             <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', marginTop: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}>
               <Mail size={13} />
-              {user?.email || 'petugas@perusahaan.com'}
+              {user?.email || 'petugas@vinix7aurum.com'}
             </p>
           </div>
 
@@ -104,7 +104,7 @@ export default function Profile() {
                 className="form-input"
                 value={form.employee_id}
                 onChange={e => setForm(p => ({ ...p, employee_id: e.target.value }))}
-                placeholder="cth: SAT-001"
+                placeholder="cth: PG-001"
               />
             </div>
             <div className="form-group">
