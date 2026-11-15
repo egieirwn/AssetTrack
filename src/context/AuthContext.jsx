@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
         return data;
       }
 
-      // Fallback profile untuk user baru
+      // Fallback profile untuk user baru (default role: warehouse_keeper, nonaktif menunggu persetujuan Admin)
       const fallbackProfile = {
         id: userId,
         full_name: userMetadata?.full_name || '',
@@ -34,7 +34,7 @@ export const AuthProvider = ({ children }) => {
         employee_id: '',
         shift: '',
         phone: '',
-        is_active: true,
+        is_active: false,
         profile_completed: false
       };
 
@@ -86,43 +86,104 @@ export const AuthProvider = ({ children }) => {
 
     let mounted = true;
 
+    // Initial session restoration
     supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
       if (!mounted) return;
-      setSession(currentSession);
-      setUser(currentSession?.user || null);
-      if (currentSession?.user) {
-        try {
-          const userProf = await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
-          if (mounted && (!userProf || userProf.is_active !== true)) {
-            await supabase.auth.signOut();
-            setSession(null);
-            setUser(null);
-            setProfile(null);
-          }
-        } finally {
-          if (mounted) setLoading(false);
-        }
-      } else {
+      if (!currentSession?.user) {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
         setLoading(false);
+        return;
       }
-    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
-      if (!mounted) return;
-      setSession(currentSession);
-      setUser(currentSession?.user || null);
-      if (currentSession?.user) {
+      try {
         const userProf = await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
-        if (mounted && (!userProf || userProf.is_active !== true)) {
-          await supabase.auth.signOut();
+        if (!mounted) return;
+
+        if (userProf && userProf.is_active === true) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          setProfile(userProf);
+        } else {
+          const invalidUserId = currentSession.user.id;
+          const invalidAccessToken = currentSession.access_token;
+          // Defer signOut to event loop to avoid locking during mount,
+          // verifying session identity & token so it cannot race with a subsequent valid login.
+          setTimeout(async () => {
+            try {
+              const { data: activeData } = await supabase.auth.getSession();
+              const activeUserId = activeData?.session?.user?.id;
+              const activeToken = activeData?.session?.access_token;
+              if (activeUserId === invalidUserId && (!invalidAccessToken || activeToken === invalidAccessToken)) {
+                await supabase.auth.signOut();
+              }
+            } catch (_) {}
+          }, 0);
           setSession(null);
           setUser(null);
           setProfile(null);
         }
-      } else {
+      } catch (err) {
+        console.warn('Error saat inisialisasi profil sesi:', err);
+        setSession(null);
+        setUser(null);
         setProfile(null);
+      } finally {
+        if (mounted) setLoading(false);
       }
-      setLoading(false);
+    });
+
+    // Reactive auth event subscriber — Deadlock-safe state transition
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!mounted) return;
+
+      if (event === 'SIGNED_OUT' || !currentSession?.user) {
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const userProf = await fetchProfile(currentSession.user.id, currentSession.user.user_metadata);
+        if (!mounted) return;
+
+        if (userProf && userProf.is_active === true) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          setProfile(userProf);
+        } else {
+          const invalidUserId = currentSession.user.id;
+          const invalidAccessToken = currentSession.access_token;
+          // IMPORTANT: Never await supabase.auth.signOut() directly inside onAuthStateChange callback.
+          // In @supabase/supabase-js, calling an auth API method while processing an auth event
+          // can deadlock the internal subscriber queue.
+          // We immediately clear React state (fail closed) and defer remote signOut,
+          // checking session identity & token so it cannot interfere with a subsequent valid session.
+          setTimeout(async () => {
+            try {
+              const { data: activeData } = await supabase.auth.getSession();
+              const activeUserId = activeData?.session?.user?.id;
+              const activeToken = activeData?.session?.access_token;
+              if (activeUserId === invalidUserId && (!invalidAccessToken || activeToken === invalidAccessToken)) {
+                await supabase.auth.signOut();
+              }
+            } catch (_) {}
+          }, 0);
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        }
+      } catch (err) {
+        console.warn('Error saat memperbarui profil pada auth state change:', err);
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
     });
 
     return () => {
@@ -132,8 +193,11 @@ export const AuthProvider = ({ children }) => {
   }, [isConfigured, fetchProfile]);
 
   const signUp = async ({ email, password, fullName }) => {
-    if (!isConfigured) return { data: { user: { email } }, error: null };
-    return supabase.auth.signUp({
+    if (!isConfigured) {
+      return { data: { user: { email } }, error: null, isPendingApproval: true };
+    }
+
+    const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
@@ -141,6 +205,22 @@ export const AuthProvider = ({ children }) => {
         emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
+
+    if (error) {
+      return { data, error, isPendingApproval: false };
+    }
+
+    // Saat Email Confirmation dinonaktifkan di Supabase, signUp langsung mengembalikan sesi (session).
+    // Namun karena akun pendaftaran baru berstatus nonaktif (is_active = false) menunggu persetujuan Admin,
+    // batalkan sesi aktif seketika agar pengguna tidak dapat menembus rute terproteksi.
+    if (data?.session) {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+    }
+
+    return { data, error: null, isPendingApproval: true };
   };
 
   const signIn = async ({ email, password }) => {
@@ -158,8 +238,10 @@ export const AuthProvider = ({ children }) => {
         setProfile(null);
         const msg = !userProfile
           ? 'Profil akun tidak ditemukan di server. Hubungi Administrator.'
-          : 'Akun Anda telah dinonaktifkan oleh Administrator PT Vinix Seven Aurum. Silakan hubungi Administrator.';
-        return { data: null, error: new Error(msg) };
+          : 'Akun Anda sedang menunggu persetujuan aktivasi dari Administrator PT Vinix Seven Aurum. Silakan hubungi Administrator untuk mengaktifkan akun Anda.';
+        const err = new Error(msg);
+        err.isPendingApproval = userProfile ? userProfile.is_active === false : false;
+        return { data: null, error: err };
       }
     }
     return { data, error };

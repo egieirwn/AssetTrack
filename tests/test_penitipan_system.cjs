@@ -174,6 +174,10 @@ function runTests() {
   // Jalankan Suite Pengujian Phase G (Reports & Final Verification)
   const { runPhaseGTests } = require('./test_phase_g_reports.cjs');
   runPhaseGTests();
+
+  // Jalankan Suite Pengujian Penyesuaian Email Confirmation & Approval Policy
+  const { runAuthEmailConfirmationAdjustmentTests } = require('./test_auth_email_confirmation_adjustment.cjs');
+  runAuthEmailConfirmationAdjustmentTests();
 }
 
 runTests();

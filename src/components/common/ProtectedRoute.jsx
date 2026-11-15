@@ -85,16 +85,20 @@ export default function ProtectedRoute({ children, allowedRoles = null }) {
             width: '56px',
             height: '56px',
             borderRadius: '50%',
-            backgroundColor: '#FEE2E2',
+            backgroundColor: revalidationDeactivated ? '#FEE2E2' : '#FEF3C7',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}>
-            <AlertCircle size={32} color="#DC2626" />
+            <AlertCircle size={32} color={revalidationDeactivated ? '#DC2626' : '#D97706'} />
           </div>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#17191C', margin: 0 }}>Akun Dinonaktifkan</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#17191C', margin: 0 }}>
+            {revalidationDeactivated ? 'Akun Dinonaktifkan' : 'Akun Menunggu Persetujuan Admin'}
+          </h2>
           <p style={{ color: '#5F646D', fontSize: '0.875rem', lineHeight: 1.6, margin: 0 }}>
-            Akun Anda saat ini berstatus nonaktif di server PT Vinix Seven Aurum. Akses operasional sistem gudang telah ditutup. Silakan hubungi Administrator untuk informasi lebih lanjut.
+            {revalidationDeactivated
+              ? 'Akun Anda saat ini telah dinonaktifkan oleh Administrator PT Vinix Seven Aurum. Akses operasional sistem gudang telah ditutup. Silakan hubungi Administrator untuk informasi lebih lanjut.'
+              : 'Akun Anda telah terdaftar namun saat ini berstatus nonaktif (menunggu verifikasi). Sesuai kebijakan keamanan, akses operasional gudang akan dibuka segera setelah diaktifkan oleh Administrator.'}
           </p>
           <button
             type="button"
