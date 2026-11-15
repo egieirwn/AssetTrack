@@ -8,6 +8,8 @@ import {
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { exportToCsv, formatIndonesianDate, formatNumber } from '../../utils/exportUtils';
+import CustomSelect from '../../components/common/CustomSelect';
+import CustomDatePicker from '../../components/common/CustomDatePicker';
 
 export default function ReportsManagement() {
   const { profile, isAdmin } = useAuth();
@@ -651,59 +653,59 @@ export default function ReportsManagement() {
               </div>
 
               <div style={{ flex: '0 0 170px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={invCategoryFilter}
                   onChange={e => setInvCategoryFilter(e.target.value)}
+                  ariaLabel="Filter Kategori"
                 >
                   <option value="all">Semua Kategori</option>
                   {categoriesList.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
 
               <div style={{ flex: '0 0 170px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={invLocationFilter}
                   onChange={e => setInvLocationFilter(e.target.value)}
+                  ariaLabel="Filter Lokasi Rak"
                 >
                   <option value="all">Semua Lokasi Rak</option>
                   {locationsList.map(l => (
                     <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
 
               <div style={{ flex: '0 0 150px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={invTrackingFilter}
                   onChange={e => setInvTrackingFilter(e.target.value)}
+                  ariaLabel="Filter Tipe Pelacakan"
                 >
                   <option value="all">Semua Tipe</option>
                   <option value="individual">Aset Individual</option>
                   <option value="quantity">Kuantitas Massal</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div style={{ flex: '0 0 150px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={invStatusFilter}
                   onChange={e => setInvStatusFilter(e.target.value)}
+                  ariaLabel="Filter Status Inventaris"
                 >
                   <option value="all">Semua Status</option>
                   <option value="available">Stok Tersedia</option>
                   <option value="empty">Stok Habis (0)</option>
                   <option value="damaged">Ada Rusak / Servis</option>
                   <option value="inactive">Nonaktif</option>
-                </select>
+                </CustomSelect>
               </div>
             </div>
           </div>
@@ -847,11 +849,11 @@ export default function ReportsManagement() {
               </div>
 
               <div style={{ flex: '0 0 160px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={brwStatusFilter}
                   onChange={e => setBrwStatusFilter(e.target.value)}
+                  ariaLabel="Filter Status Peminjaman"
                 >
                   <option value="all">Semua Status</option>
                   <option value="borrowed">Sedang Dipinjam</option>
@@ -859,42 +861,40 @@ export default function ReportsManagement() {
                   <option value="overdue">Terlambat (Overdue)</option>
                   <option value="returned">Selesai</option>
                   <option value="cancelled">Dibatalkan</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div style={{ flex: '0 0 160px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={brwDeptFilter}
                   onChange={e => setBrwDeptFilter(e.target.value)}
+                  ariaLabel="Filter Departemen"
                 >
                   <option value="all">Semua Departemen</option>
                   {departmentsList.map(d => (
                     <option key={d} value={d}>{d}</option>
                   ))}
-                </select>
+                </CustomSelect>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Dari:</span>
-                <input
-                  type="date"
-                  className="atrium-input"
-                  style={{ width: '135px', fontSize: '0.8125rem' }}
+                <CustomDatePicker
                   value={brwStartDate}
                   onChange={e => setBrwStartDate(e.target.value)}
+                  placeholder="Mulai..."
+                  title="Tanggal Awal Peminjaman"
                 />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Sampai:</span>
-                <input
-                  type="date"
-                  className="atrium-input"
-                  style={{ width: '135px', fontSize: '0.8125rem' }}
+                <CustomDatePicker
                   value={brwEndDate}
                   onChange={e => setBrwEndDate(e.target.value)}
+                  placeholder="Sampai..."
+                  title="Tanggal Akhir Peminjaman"
                 />
               </div>
             </div>
@@ -1015,11 +1015,11 @@ export default function ReportsManagement() {
               </div>
 
               <div style={{ flex: '0 0 180px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={movTypeFilter}
                   onChange={e => setMovTypeFilter(e.target.value)}
+                  ariaLabel="Filter Jenis Mutasi"
                 >
                   <option value="all">Semua Jenis Mutasi</option>
                   <option value="initial_stock">Saldo Awal (initial_stock)</option>
@@ -1031,28 +1031,26 @@ export default function ReportsManagement() {
                   <option value="repair_complete">Selesai Servis (repair_complete)</option>
                   <option value="adjustment">Penyesuaian (adjustment)</option>
                   <option value="write_off">Afkir Permanen (write_off)</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Dari:</span>
-                <input
-                  type="date"
-                  className="atrium-input"
-                  style={{ width: '135px', fontSize: '0.8125rem' }}
+                <CustomDatePicker
                   value={movStartDate}
                   onChange={e => setMovStartDate(e.target.value)}
+                  placeholder="Mulai..."
+                  title="Tanggal Awal Mutasi"
                 />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Sampai:</span>
-                <input
-                  type="date"
-                  className="atrium-input"
-                  style={{ width: '135px', fontSize: '0.8125rem' }}
+                <CustomDatePicker
                   value={movEndDate}
                   onChange={e => setMovEndDate(e.target.value)}
+                  placeholder="Sampai..."
+                  title="Tanggal Akhir Mutasi"
                 />
               </div>
             </div>
@@ -1153,11 +1151,11 @@ export default function ReportsManagement() {
               </div>
 
               <div style={{ flex: '0 0 180px' }}>
-                <select
+                <CustomSelect
                   className="atrium-input"
-                  style={{ width: '100%' }}
                   value={auditActionFilter}
                   onChange={e => setAuditActionFilter(e.target.value)}
+                  ariaLabel="Filter Aksi Audit"
                 >
                   <option value="all">Semua Aksi</option>
                   <option value="borrowing_created">Peminjaman Dibuat</option>
@@ -1167,28 +1165,26 @@ export default function ReportsManagement() {
                   <option value="item_created">Pendaftaran Barang Baru</option>
                   <option value="staff_invited">Undangan Staf Baru</option>
                   <option value="staff_deactivated">Penonaktifan Staf</option>
-                </select>
+                </CustomSelect>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Dari:</span>
-                <input
-                  type="date"
-                  className="atrium-input"
-                  style={{ width: '135px', fontSize: '0.8125rem' }}
+                <CustomDatePicker
                   value={auditStartDate}
                   onChange={e => setAuditStartDate(e.target.value)}
+                  placeholder="Mulai..."
+                  title="Tanggal Awal Log Audit"
                 />
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Sampai:</span>
-                <input
-                  type="date"
-                  className="atrium-input"
-                  style={{ width: '135px', fontSize: '0.8125rem' }}
+                <CustomDatePicker
                   value={auditEndDate}
                   onChange={e => setAuditEndDate(e.target.value)}
+                  placeholder="Sampai..."
+                  title="Tanggal Akhir Log Audit"
                 />
               </div>
             </div>

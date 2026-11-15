@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ClipboardList, Search, Filter, Eye, RefreshCw } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import CustomSelect from '../components/common/CustomSelect';
+import CustomDatePicker from '../components/common/CustomDatePicker';
 
 const formatDT = (ts) => {
   if (!ts) return '—';
@@ -126,17 +128,21 @@ export default function DepositHistory() {
         </div>
         <div className="filter-group">
           <Filter size={16} />
-          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="form-select-sm">
+          <CustomSelect
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="form-select-sm"
+            autoWidth
+          >
             <option value="">Semua Status</option>
             <option value="stored">Dititipkan</option>
             <option value="completed">Selesai</option>
             <option value="pending">Menunggu</option>
             <option value="cancelled">Dibatalkan</option>
-          </select>
+          </CustomSelect>
         </div>
         <div className="filter-group">
-          <input
-            type="date"
+          <CustomDatePicker
             value={filterDate}
             onChange={e => setFilterDate(e.target.value)}
             className="form-input-sm"

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import CustomSelect from '../../components/common/CustomSelect';
 
 export default function InventoryList() {
   const navigate = useNavigate();
@@ -266,59 +267,64 @@ export default function InventoryList() {
           />
         </div>
 
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
-          aria-label="Filter Tipe Pelacakan"
+          ariaLabel="Filter Tipe Pelacakan"
+          autoWidth
         >
           <option value="">Semua Tipe Pelacakan</option>
           <option value="individual">Aset Individual (Unit Unik)</option>
           <option value="quantity">Pelacakan Kuantitas</option>
-        </select>
+        </CustomSelect>
 
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           value={selectedCategory}
           onChange={(e) => setSelectedCategory(e.target.value)}
-          aria-label="Filter Kategori"
+          ariaLabel="Filter Kategori"
+          autoWidth
         >
           <option value="">Semua Kategori</option>
           {categories.map(c => (
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
-        </select>
+        </CustomSelect>
 
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           value={selectedLocation}
           onChange={(e) => setSelectedLocation(e.target.value)}
-          aria-label="Filter Lokasi Rak"
+          ariaLabel="Filter Lokasi Rak"
+          autoWidth
         >
           <option value="">Semua Lokasi Rak</option>
           {locations.map(l => (
             <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
           ))}
-        </select>
+        </CustomSelect>
 
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           value={selectedStatus}
           onChange={(e) => setSelectedStatus(e.target.value)}
-          aria-label="Filter Status"
+          ariaLabel="Filter Status"
+          autoWidth
         >
           <option value="">Semua Status</option>
           <option value="available">Tersedia</option>
           <option value="borrowed">Sedang Dipinjam</option>
           <option value="maintenance">Perawatan/Rusak</option>
           <option value="inactive">Nonaktif</option>
-        </select>
+        </CustomSelect>
 
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          aria-label="Urutkan"
+          ariaLabel="Urutkan"
+          autoWidth
         >
           <option value="name_asc">Nama (A - Z)</option>
           <option value="name_desc">Nama (Z - A)</option>
@@ -326,7 +332,7 @@ export default function InventoryList() {
           <option value="avail_asc">Stok Tersedia (Sedikit)</option>
           <option value="total_desc">Total Unit (Terbanyak)</option>
           <option value="updated_desc">Terakhir Diperbarui</option>
-        </select>
+        </CustomSelect>
       </div>
 
       {/* Error State */}

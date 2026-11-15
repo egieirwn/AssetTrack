@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Save, KeyRound, Mail, Phone, Hash, Clock, Shield } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import CustomSelect from '../components/common/CustomSelect';
 
 export default function Profile() {
   const { user, profile, updateUserProfile, updatePassword } = useAuth();
@@ -148,16 +149,17 @@ export default function Profile() {
               <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', fontWeight: 600, color: '#475569', marginBottom: '0.375rem' }}>
                 <Clock size={13} /> Shift Kerja
               </label>
-              <select
+              <CustomSelect
                 className="atrium-input"
                 value={form.shift}
                 onChange={e => setForm(p => ({ ...p, shift: e.target.value }))}
+                ariaLabel="Pilih Shift Kerja"
               >
                 <option value="">Pilih shift</option>
                 <option value="Pagi">Pagi (06:00–14:00)</option>
                 <option value="Siang">Siang (14:00–22:00)</option>
                 <option value="Malam">Malam (22:00–06:00)</option>
-              </select>
+              </CustomSelect>
             </div>
 
             <div style={{ marginBottom: '1.25rem' }}>

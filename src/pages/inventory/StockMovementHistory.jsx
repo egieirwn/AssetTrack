@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import CustomSelect from '../../components/common/CustomSelect';
 
 const MOVEMENT_TYPES = [
   { value: 'initial', label: 'Saldo Awal (Initial)' },
@@ -153,43 +154,46 @@ export default function StockMovementHistory() {
 
       {/* Toolbar / Filters */}
       <div className="atrium-toolbar">
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           style={{ minWidth: '220px' }}
           value={selectedItemId}
           onChange={(e) => handleItemFilterChange(e.target.value)}
-          aria-label="Filter Barang"
+          ariaLabel="Filter Barang"
+          autoWidth
         >
           <option value="">Semua Barang Inventaris</option>
           {items.map(i => (
             <option key={i.id} value={i.id}>{i.name} ({i.item_code})</option>
           ))}
-        </select>
+        </CustomSelect>
 
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           style={{ minWidth: '200px' }}
           value={selectedType}
           onChange={(e) => setSelectedType(e.target.value)}
-          aria-label="Filter Tipe Mutasi"
+          ariaLabel="Filter Tipe Mutasi"
+          autoWidth
         >
           <option value="">Semua Tipe Mutasi</option>
           {MOVEMENT_TYPES.map(m => (
             <option key={m.value} value={m.value}>{m.label}</option>
           ))}
-        </select>
+        </CustomSelect>
 
-        <select
+        <CustomSelect
           className="atrium-filter-select"
           value={dateFilter}
           onChange={(e) => setDateFilter(e.target.value)}
-          aria-label="Filter Rentang Waktu"
+          ariaLabel="Filter Rentang Waktu"
+          autoWidth
         >
           <option value="all">Semua Waktu</option>
           <option value="today">Hari Ini</option>
           <option value="week">7 Hari Terakhir</option>
           <option value="month">30 Hari Terakhir</option>
-        </select>
+        </CustomSelect>
 
         {(selectedItemId || selectedType || dateFilter !== 'all') && (
           <button

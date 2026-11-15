@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import CustomSelect from '../../components/common/CustomSelect';
 
 export default function BorrowingList() {
   const navigate = useNavigate();
@@ -256,12 +257,12 @@ export default function BorrowingList() {
           </div>
 
           {/* Status Filter */}
-          <div style={{ flex: '0 0 180px' }}>
-            <select
+          <div style={{ flex: '0 0 190px' }}>
+            <CustomSelect
               className="atrium-input"
-              style={{ width: '100%' }}
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
+              ariaLabel="Filter Status Peminjaman"
             >
               <option value="all">Semua Status</option>
               <option value="borrowed">Sedang Dipinjam</option>
@@ -269,22 +270,22 @@ export default function BorrowingList() {
               <option value="overdue">Terlambat (Overdue)</option>
               <option value="returned">Selesai Dikembalikan</option>
               <option value="cancelled">Dibatalkan</option>
-            </select>
+            </CustomSelect>
           </div>
 
           {/* Date Filter */}
-          <div style={{ flex: '0 0 160px' }}>
-            <select
+          <div style={{ flex: '0 0 170px' }}>
+            <CustomSelect
               className="atrium-input"
-              style={{ width: '100%' }}
               value={dateFilter}
               onChange={e => setDateFilter(e.target.value)}
+              ariaLabel="Filter Rentang Waktu"
             >
               <option value="all">Semua Waktu</option>
               <option value="today">Hari Ini</option>
               <option value="this_week">7 Hari Terakhir</option>
               <option value="this_month">30 Hari Terakhir</option>
-            </select>
+            </CustomSelect>
           </div>
         </div>
       </div>
@@ -300,18 +301,18 @@ export default function BorrowingList() {
           </span>
         </div>
 
-        <div className="table-wrapper" style={{ margin: 0, overflowX: 'auto' }}>
-          <table className="atrium-inventory-table">
+        <div className="table-wrapper" style={{ margin: 0, overflowX: 'auto', width: '100%' }}>
+          <table className="atrium-inventory-table" style={{ width: '100%' }}>
             <thead>
               <tr>
-                <th>Kode Tiket</th>
-                <th>Peminjam & Departemen</th>
-                <th>Waktu Pinjam</th>
-                <th>Batas Jatuh Tempo</th>
-                <th style={{ textAlign: 'center' }}>Jumlah Barang</th>
-                <th style={{ textAlign: 'center' }}>Status</th>
-                <th>Petugas Pencatat</th>
-                <th style={{ textAlign: 'right', width: '150px' }}>Aksi</th>
+                <th style={{ width: '16%', minWidth: '150px' }}>Kode Tiket</th>
+                <th style={{ width: '22%', minWidth: '180px' }}>Peminjam & Departemen</th>
+                <th style={{ width: '13%', minWidth: '130px' }}>Waktu Pinjam</th>
+                <th style={{ width: '13%', minWidth: '130px' }}>Batas Jatuh Tempo</th>
+                <th style={{ textAlign: 'center', width: '12%', minWidth: '120px' }}>Jumlah Barang</th>
+                <th style={{ textAlign: 'center', width: '10%', minWidth: '100px' }}>Status</th>
+                <th style={{ width: '14%', minWidth: '130px' }}>Petugas Pencatat</th>
+                <th style={{ textAlign: 'right', width: '150px', minWidth: '150px' }}>Aksi</th>
               </tr>
             </thead>
             <tbody>

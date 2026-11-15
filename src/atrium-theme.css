@@ -1230,19 +1230,22 @@ select option:checked {
   overflow: hidden;
 }
 
-.atrium-table-container {
+.atrium-table-container,
+.table-wrapper {
   width: 100%;
   overflow-x: auto;
 }
 
-.atrium-table {
+.atrium-table,
+.atrium-inventory-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.875rem;
 }
 
-.atrium-table th {
+.atrium-table th,
+.atrium-inventory-table th {
   background-color: #FAF9FB;
   padding: 0.875rem 1.25rem;
   font-size: 0.75rem;
@@ -1254,18 +1257,21 @@ select option:checked {
   white-space: nowrap;
 }
 
-.atrium-table td {
+.atrium-table td,
+.atrium-inventory-table td {
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #F1F0F4;
   color: var(--atrium-text-primary);
   vertical-align: middle;
 }
 
-.atrium-table tr:last-child td {
+.atrium-table tr:last-child td,
+.atrium-inventory-table tr:last-child td {
   border-bottom: none;
 }
 
-.atrium-table tr:hover td {
+.atrium-table tr:hover td,
+.atrium-inventory-table tr:hover td {
   background-color: #FAFAFC;
 }
 
@@ -1586,6 +1592,37 @@ select option:checked {
   .no-print {
     display: none !important;
   }
+}
+
+/* --------------------------------------------------------------------------
+   Custom Select & DatePicker Popover Enhancements
+   -------------------------------------------------------------------------- */
+.custom-select-container {
+  font-family: inherit;
+}
+
+.custom-select-container button:focus-visible,
+.custom-date-picker-trigger:focus-visible {
+  outline: 2px solid var(--atrium-accent-dark, #17191C);
+  outline-offset: 1px;
+}
+
+/* Slim modern scrollbar for popover menus */
+.custom-select-container [role="listbox"]::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-select-container [role="listbox"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-select-container [role="listbox"]::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+}
+
+.custom-select-container [role="listbox"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
 }
 
 
