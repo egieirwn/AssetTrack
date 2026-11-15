@@ -969,22 +969,256 @@
   flex-wrap: wrap;
 }
 
-.atrium-filter-select {
-  height: 42px;
-  border-radius: var(--atrium-card-radius-pill);
-  border: 1px solid var(--atrium-border-soft);
-  background-color: var(--atrium-card-bg);
-  padding: 0 1rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--atrium-text-primary);
-  outline: none;
+/* ==========================================================================
+   ATRIUM UI COMPONENTS — Buttons, Dropdowns, Inputs & Form Lists
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Modern Atrium Buttons
+   -------------------------------------------------------------------------- */
+.btn-atrium-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 1.25rem;
+  background-color: var(--atrium-accent-dark, #17191C);
+  color: #FFFFFF !important;
+  border: 1px solid transparent;
+  border-radius: var(--atrium-card-radius-pill, 9999px);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  text-decoration: none;
 }
 
-.atrium-filter-select:focus {
-  border-color: var(--atrium-accent-dark);
+.btn-atrium-primary:hover:not(:disabled) {
+  background-color: var(--atrium-accent-dark-hover, #2B2E33);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+}
+
+.btn-atrium-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.btn-atrium-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-atrium-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 1.125rem;
+  background-color: #FFFFFF;
+  color: var(--atrium-text-primary, #17191C) !important;
+  border: 1px solid var(--atrium-border-soft, #E3E2E6);
+  border-radius: var(--atrium-card-radius-pill, 9999px);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.btn-atrium-outline:hover:not(:disabled) {
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.btn-atrium-outline:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-atrium-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-atrium-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 36px;
+  padding: 0 0.875rem;
+  background: transparent;
+  color: var(--atrium-text-secondary, #5F646D);
+  border: 1px solid transparent;
+  border-radius: var(--atrium-card-radius-pill, 9999px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btn-atrium-ghost:hover:not(:disabled) {
+  background-color: rgba(15, 23, 42, 0.06);
+  color: var(--atrium-text-primary, #17191C);
+}
+
+.btn-atrium-ghost:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-atrium-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 40px;
+  padding: 0 1.125rem;
+  background-color: #FEE2E2;
+  color: #DC2626 !important;
+  border: 1px solid #FECACA;
+  border-radius: var(--atrium-card-radius-pill, 9999px);
+  font-size: 0.84375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-atrium-danger:hover:not(:disabled) {
+  background-color: #DC2626;
+  color: #FFFFFF !important;
+  border-color: #DC2626;
+  transform: translateY(-1px);
+}
+
+.btn-atrium-sm {
+  height: 32px !important;
+  padding: 0 0.875rem !important;
+  font-size: 0.78125rem !important;
+}
+
+/* --------------------------------------------------------------------------
+   Modern Form Inputs & Glass Cards (Atrium Style)
+   -------------------------------------------------------------------------- */
+.atrium-input,
+.atrium-input-field {
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--atrium-border-soft, #E3E2E6);
+  background-color: #FFFFFF;
+  padding: 0 0.875rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+  color: var(--atrium-text-primary, #17191C);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.atrium-input:focus,
+.atrium-input-field:focus {
+  outline: none;
+  background-color: #FFFFFF;
+  border-color: var(--atrium-accent-dark, #17191C);
+  box-shadow: 0 0 0 3px rgba(23, 25, 28, 0.08);
+}
+
+.atrium-input::placeholder,
+.atrium-input-field::placeholder {
+  color: #94A3B8;
+  font-size: 0.84375rem;
+}
+
+.atrium-glass-card {
+  background-color: #FFFFFF;
+  border: 1px solid var(--atrium-card-border, rgba(0, 0, 0, 0.06));
+  border-radius: var(--atrium-card-radius, 22px);
+  padding: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: box-shadow 0.2s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Custom Styled Dropdowns (Select Elements)
+   -------------------------------------------------------------------------- */
+select.atrium-filter-select,
+select.atrium-input,
+select.atrium-input-field,
+select.form-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  height: 42px;
+  background-color: #FFFFFF;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.875rem center;
+  background-size: 15px;
+  padding: 0 2.5rem 0 1rem !important;
+  border-radius: var(--atrium-card-radius-pill, 9999px);
+  border: 1px solid var(--atrium-border-soft, #E3E2E6);
+  font-size: 0.84375rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--atrium-text-primary, #17191C);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+select.atrium-input,
+select.atrium-input-field,
+select.form-input {
+  border-radius: 12px;
+}
+
+select.atrium-filter-select:hover,
+select.atrium-input:hover,
+select.atrium-input-field:hover,
+select.form-input:hover {
+  border-color: #CBD5E1;
+  background-color: #FAFAFB;
+}
+
+select.atrium-filter-select:focus,
+select.atrium-input:focus,
+select.atrium-input-field:focus,
+select.form-input:focus {
+  border-color: var(--atrium-accent-dark, #17191C);
+  background-color: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(23, 25, 28, 0.08);
+}
+
+/* Custom Dropdown Option Items */
+select option {
+  padding: 10px 14px;
+  background-color: #FFFFFF;
+  color: #17191C;
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+select option:checked {
+  background-color: #F1F5F9;
+  font-weight: 600;
+  color: #0F172A;
 }
 
 /* Modern Data Table */
