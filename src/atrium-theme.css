@@ -1163,7 +1163,6 @@
   }
 }
 
-
 @media (max-width: 768px) {
   .atrium-layout {
     flex-direction: column;
@@ -1202,4 +1201,157 @@
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   Phase F — Borrowing & Return Management Component Styles
+   ========================================================================== */
+
+/* Borrowing Status Badges */
+.badge-status-borrowed {
+  background-color: #EFF6FF;
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.badge-status-partial_returned {
+  background-color: #FFFBEB;
+  color: #D97706;
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.badge-status-returned {
+  background-color: #ECFDF5;
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.badge-status-overdue {
+  background-color: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  font-weight: 700;
+}
+
+.badge-status-cancelled {
+  background-color: #F3F4F6;
+  color: #6B7280;
+  border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+/* Borrowing Timeline / Activity Audit Trail */
+.atrium-timeline {
+  position: relative;
+  padding-left: 2rem;
+  margin: 1.5rem 0;
+}
+
+.atrium-timeline::before {
+  content: '';
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.75rem;
+  width: 2px;
+  background-color: #E2E8F0;
+}
+
+.atrium-timeline-item {
+  position: relative;
+  margin-bottom: 1.25rem;
+}
+
+.atrium-timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.atrium-timeline-dot {
+  position: absolute;
+  left: -2rem;
+  top: 0.25rem;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #FFFFFF;
+  border: 3px solid var(--atrium-accent-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.atrium-timeline-dot.dot-success {
+  border-color: #10B981;
+}
+
+.atrium-timeline-dot.dot-warning {
+  border-color: #F59E0B;
+}
+
+.atrium-timeline-dot.dot-danger {
+  border-color: #EF4444;
+}
+
+.atrium-timeline-content {
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  border-radius: 12px;
+  padding: 0.875rem 1rem;
+}
+
+/* QR Receipt Layout & Print Styles */
+.atrium-receipt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.atrium-receipt-card {
+  background-color: #FFFFFF;
+  border-radius: 16px;
+  max-width: 680px;
+  width: 100%;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.atrium-receipt-header {
+  padding: 1.5rem;
+  border-bottom: 2px dashed #CBD5E1;
+  text-align: center;
+  background-color: #F8FAFC;
+}
+
+.atrium-receipt-body {
+  padding: 1.5rem;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .atrium-printable-receipt, .atrium-printable-receipt * {
+    visibility: visible;
+  }
+  .atrium-printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 2rem !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
 

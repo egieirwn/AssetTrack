@@ -31,6 +31,13 @@ import StockMovementHistory from './pages/inventory/StockMovementHistory';
 import ItemCategories from './pages/admin/ItemCategories';
 import StorageLocations from './pages/admin/StorageLocations';
 
+// Borrowing & Return Pages (Phase F)
+import BorrowerList from './pages/borrowing/BorrowerList';
+import BorrowingList from './pages/borrowing/BorrowingList';
+import CreateBorrowing from './pages/borrowing/CreateBorrowing';
+import BorrowingDetail from './pages/borrowing/BorrowingDetail';
+import ReturnProcessing from './pages/borrowing/ReturnProcessing';
+
 import FutureModulePlaceholder from './components/common/FutureModulePlaceholder';
 
 // Admin Pages
@@ -70,10 +77,13 @@ export default function App() {
         <Route path="/kategori-barang" element={<ItemCategories />} />
         <Route path="/lokasi-penyimpanan" element={<StorageLocations />} />
 
-        {/* Modul Transaksi Peminjaman (Phase F - Future Module Placeholder) */}
-        <Route path="/peminjam" element={<FutureModulePlaceholder pathOverride="/peminjam" />} />
-        <Route path="/peminjaman" element={<FutureModulePlaceholder pathOverride="/peminjaman" />} />
-        <Route path="/pengembalian" element={<FutureModulePlaceholder pathOverride="/pengembalian" />} />
+        {/* Modul Peminjaman & Pengembalian (Phase F - Active) */}
+        <Route path="/peminjam" element={<BorrowerList />} />
+        <Route path="/peminjaman" element={<BorrowingList />} />
+        <Route path="/peminjaman/tambah" element={<CreateBorrowing />} />
+        <Route path="/peminjaman/:id" element={<BorrowingDetail />} />
+        <Route path="/peminjaman/:id/pengembalian" element={<ReturnProcessing />} />
+        <Route path="/pengembalian" element={<ReturnProcessing />} />
 
         {/* Legacy Deposit Routes (Preserved for Historical Audit) */}
         <Route path="/penitipan-baru" element={<NewDeposit />} />

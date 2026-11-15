@@ -166,6 +166,10 @@ function runTests() {
   // Jalankan Suite Pengujian Phase E (Warehouse Inventory Management)
   const { runPhaseETests } = require('./test_phase_e_inventory.cjs');
   runPhaseETests();
+
+  // Jalankan Suite Pengujian Phase F (Borrowing & Return Management)
+  const { runPhaseFTests } = require('./test_phase_f_borrowing.cjs');
+  runPhaseFTests();
 }
 
 runTests();

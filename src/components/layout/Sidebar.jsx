@@ -64,24 +64,24 @@ export default function Sidebar() {
           <span className="atrium-tooltip">Lokasi Penyimpanan</span>
         </NavLink>
 
-        {/* Future Module — Phase F */}
+        {/* Borrowers Module — Phase F (Active) */}
         <NavLink
           to="/peminjam"
           className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
           aria-label="Direktori Peminjam"
         >
           <Users size={20} />
-          <span className="atrium-tooltip">Direktori Peminjam (Phase F)</span>
+          <span className="atrium-tooltip">Direktori Peminjam</span>
         </NavLink>
 
-        {/* Future Module — Phase F */}
+        {/* Borrowing & Return Module — Phase F (Active) */}
         <NavLink
           to="/peminjaman"
           className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
           aria-label="Peminjaman & Pengembalian"
         >
           <ArrowLeftRight size={20} />
-          <span className="atrium-tooltip">Peminjaman & Pengembalian (Phase F)</span>
+          <span className="atrium-tooltip">Peminjaman & Pengembalian</span>
         </NavLink>
 
         <NavLink
