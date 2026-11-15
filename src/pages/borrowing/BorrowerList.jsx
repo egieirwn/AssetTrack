@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import CustomSelect from '../../components/common/CustomSelect';
 
 export default function BorrowerList() {
   const { isAdmin } = useAuth();
@@ -422,31 +423,31 @@ export default function BorrowerList() {
 
           {/* Department Filter */}
           <div style={{ flex: '0 0 200px' }}>
-            <select
+            <CustomSelect
               className="atrium-input"
-              style={{ width: '100%' }}
               value={departmentFilter}
               onChange={e => setDepartmentFilter(e.target.value)}
+              ariaLabel="Filter Departemen"
             >
               <option value="all">Semua Departemen</option>
               {departments.map(dept => (
                 <option key={dept} value={dept}>{dept}</option>
               ))}
-            </select>
+            </CustomSelect>
           </div>
 
           {/* Status Filter */}
           <div style={{ flex: '0 0 160px' }}>
-            <select
+            <CustomSelect
               className="atrium-input"
-              style={{ width: '100%' }}
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
+              ariaLabel="Filter Status"
             >
               <option value="all">Semua Status</option>
               <option value="active">Aktif</option>
               <option value="inactive">Nonaktif</option>
-            </select>
+            </CustomSelect>
           </div>
         </div>
       </div>
