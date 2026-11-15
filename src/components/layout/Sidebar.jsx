@@ -96,14 +96,14 @@ export default function Sidebar() {
         {/* Admin-only Modules */}
         {isAdmin && (
           <>
-            {/* Future Module — Phase G */}
+            {/* Reports Module — Phase G (Active) */}
             <NavLink
               to="/laporan"
               className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
               aria-label="Laporan Manajemen"
             >
               <BarChart3 size={20} />
-              <span className="atrium-tooltip">Laporan Gudang (Phase G)</span>
+              <span className="atrium-tooltip">Laporan Gudang</span>
             </NavLink>
 
             {/* Phase C — Active Account Management */}

@@ -4,7 +4,7 @@ import {
   Boxes, PackagePlus, ArrowLeftRight, Users, Clock,
   CheckCircle2, AlertTriangle, ArrowRight, RefreshCw,
   Sparkles, ShieldCheck, ChevronRight, Check,
-  AlertCircle, Tag, MapPin, UserCog, WifiOff, Database
+  AlertCircle, Tag, MapPin, UserCog, WifiOff, Database, FileText
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -21,8 +21,12 @@ export default function Dashboard() {
   // Warehouse KPI metrics (default to real zeroes)
   const [stats, setStats] = useState({
     totalItems: 0,
+    totalSku: 0,
+    totalPhysicalUnits: 0,
     availableQty: 0,
     borrowedQty: 0,
+    damagedQty: 0,
+    underRepairQty: 0,
     maintenanceQty: 0,
     activeBorrowings: 0,
     overdueCount: 0,
@@ -32,6 +36,7 @@ export default function Dashboard() {
   // Actionable priority tasks & real borrowings from database
   const [priorities, setPriorities] = useState([]);
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [recentMovements, setRecentMovements] = useState([]);
   const [urgentItem, setUrgentItem] = useState(null);
   const [scheduleItems, setScheduleItems] = useState([]);
 
@@ -115,15 +120,34 @@ export default function Dashboard() {
         throw new Error(`Gagal memuat transaksi peminjaman: ${borrowingsError.message}`);
       }
 
+      // 3. Fetch recent stock movements for audit and ledger visibility
+      const { data: movements } = await supabase
+        .from('stock_movements')
+        .select(`
+          id,
+          movement_type,
+          quantity_delta,
+          qty_after,
+          reason,
+          created_at,
+          items (id, item_code, name)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
       // Compute actual inventory metrics
       let totalItems = 0;
       let availableQty = 0;
       let maintenanceQty = 0;
+      let damagedQty = 0;
+      let underRepairQty = 0;
 
       if (items && items.length > 0) {
         items.forEach(item => {
           totalItems += item.total_qty || 0;
           availableQty += item.available_qty || 0;
+          damagedQty += item.damaged_qty || 0;
+          underRepairQty += item.under_repair_qty || 0;
           maintenanceQty += (item.damaged_qty || 0) + (item.under_repair_qty || 0);
         });
       }
@@ -195,9 +219,13 @@ export default function Dashboard() {
 
       setStats({
         totalItems,
+        totalSku: items?.length || 0,
+        totalPhysicalUnits: totalItems,
         availableQty,
         borrowedQty,
         maintenanceQty,
+        damagedQty,
+        underRepairQty,
         activeBorrowings,
         overdueCount,
         returnsDueToday
@@ -217,6 +245,7 @@ export default function Dashboard() {
       setPriorities(derivedPriorities.slice(0, 4));
       setScheduleItems(todayScheduled);
       setRecentTransactions(borrowings || []);
+      setRecentMovements(movements || []);
       setLastRefreshed(new Date());
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -362,6 +391,15 @@ export default function Dashboard() {
               onClick={() => navigate('/inventaris')}
             >
               <Boxes size={14} />
+              <span>SKU: {stats.totalSku} ({stats.totalPhysicalUnits} Unit Fisik)</span>
+            </button>
+
+            <button
+              type="button"
+              className="atrium-mini-pill"
+              onClick={() => navigate('/inventaris')}
+            >
+              <CheckCircle2 size={14} color="#16A34A" />
               <span>Stok Siap: {stats.availableQty} Unit</span>
             </button>
 
@@ -382,7 +420,7 @@ export default function Dashboard() {
                 onClick={() => navigate('/inventaris')}
               >
                 <AlertTriangle size={14} />
-                <span>Perlu Perbaikan: {stats.maintenanceQty}</span>
+                <span>Rusak/Perbaikan: {stats.maintenanceQty}</span>
               </button>
             )}
           </div>
@@ -770,6 +808,132 @@ export default function Dashboard() {
             <strong style={{ fontSize: '0.8125rem' }}>Pengembalian</strong>
             <span style={{ fontSize: '0.6875rem', color: 'var(--atrium-text-muted)' }}>Proses serah terima</span>
           </button>
+
+          {isAdmin ? (
+            <>
+              <button
+                type="button"
+                className="atrium-btn-light"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0.875rem 1rem',
+                  borderRadius: '16px',
+                  textAlign: 'left'
+                }}
+                onClick={() => navigate('/laporan')}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: '#F5F3FF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '0.5rem',
+                  color: '#7C3AED'
+                }}>
+                  <FileText size={18} />
+                </div>
+                <strong style={{ fontSize: '0.8125rem' }}>Pusat Laporan</strong>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--atrium-text-muted)' }}>Ekspor & audit gudang</span>
+              </button>
+
+              <button
+                type="button"
+                className="atrium-btn-light"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0.875rem 1rem',
+                  borderRadius: '16px',
+                  textAlign: 'left'
+                }}
+                onClick={() => navigate('/manajemen-petugas')}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: '#FFF7ED',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '0.5rem',
+                  color: '#EA580C'
+                }}>
+                  <UserCog size={18} />
+                </div>
+                <strong style={{ fontSize: '0.8125rem' }}>Kelola Petugas</strong>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--atrium-text-muted)' }}>Akses & otorisasi</span>
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="atrium-btn-light"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0.875rem 1rem',
+                  borderRadius: '16px',
+                  textAlign: 'left'
+                }}
+                onClick={() => navigate('/inventaris/barang-masuk')}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: '#F5F3FF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '0.5rem',
+                  color: '#7C3AED'
+                }}>
+                  <Boxes size={18} />
+                </div>
+                <strong style={{ fontSize: '0.8125rem' }}>Barang Masuk</strong>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--atrium-text-muted)' }}>Check-in & stok baru</span>
+              </button>
+
+              <button
+                type="button"
+                className="atrium-btn-light"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0.875rem 1rem',
+                  borderRadius: '16px',
+                  textAlign: 'left'
+                }}
+                onClick={() => navigate('/inventaris/penyesuaian-stok')}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  backgroundColor: '#FFF7ED',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '0.5rem',
+                  color: '#EA580C'
+                }}>
+                  <Clock size={18} />
+                </div>
+                <strong style={{ fontSize: '0.8125rem' }}>Penyesuaian Stok</strong>
+                <span style={{ fontSize: '0.6875rem', color: 'var(--atrium-text-muted)' }}>Koreksi & opname fisik</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* Recent Activity List from Real Database */}
@@ -808,9 +972,31 @@ export default function Dashboard() {
                 </span>
               </div>
             ))
+          ) : recentMovements.length > 0 ? (
+            recentMovements.slice(0, 3).map((mv) => (
+              <div key={mv.id} className="atrium-activity-item">
+                <div className="atrium-activity-avatar" style={{ backgroundColor: '#F1F5F9', color: '#334155' }}>
+                  <Boxes size={14} />
+                </div>
+                <div className="atrium-activity-meta">
+                  <p>{mv.items?.name || 'Barang'} · <span style={{ fontWeight: 400, color: 'var(--atrium-text-secondary)' }}>{mv.items?.item_code || 'SKU'}</span></p>
+                  <span>Mutasi: {mv.movement_type} · {mv.created_at ? new Date(mv.created_at).toLocaleDateString('id-ID') : 'Hari ini'}</span>
+                </div>
+                <span style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  padding: '0.15rem 0.5rem',
+                  borderRadius: '6px',
+                  backgroundColor: mv.quantity_delta > 0 ? '#DCFCE7' : '#FEE2E2',
+                  color: mv.quantity_delta > 0 ? '#15803D' : '#991B1B'
+                }}>
+                  {mv.quantity_delta > 0 ? `+${mv.quantity_delta}` : mv.quantity_delta}
+                </span>
+              </div>
+            ))
           ) : (
             <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--atrium-text-muted)', fontSize: '0.75rem' }}>
-              Belum ada riwayat transaksi peminjaman tercatat di database.
+              Belum ada riwayat aktivitas gudang tercatat di database.
             </div>
           )}
         </div>

@@ -170,6 +170,10 @@ function runTests() {
   // Jalankan Suite Pengujian Phase F (Borrowing & Return Management)
   const { runPhaseFTests } = require('./test_phase_f_borrowing.cjs');
   runPhaseFTests();
+
+  // Jalankan Suite Pengujian Phase G (Reports & Final Verification)
+  const { runPhaseGTests } = require('./test_phase_g_reports.cjs');
+  runPhaseGTests();
 }
 
 runTests();

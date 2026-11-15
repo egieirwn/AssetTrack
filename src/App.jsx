@@ -38,11 +38,9 @@ import CreateBorrowing from './pages/borrowing/CreateBorrowing';
 import BorrowingDetail from './pages/borrowing/BorrowingDetail';
 import ReturnProcessing from './pages/borrowing/ReturnProcessing';
 
-import FutureModulePlaceholder from './components/common/FutureModulePlaceholder';
-
 // Admin Pages
 import StaffManagement from './pages/admin/StaffManagement';
-import Reports from './pages/admin/Reports';
+import ReportsManagement from './pages/reports/ReportsManagement';
 
 export default function App() {
   return (
@@ -99,7 +97,7 @@ export default function App() {
           <ProtectedRoute allowedRoles={['admin']}><StaffManagement /></ProtectedRoute>
         } />
         <Route path="/laporan" element={
-          <ProtectedRoute allowedRoles={['admin']}><FutureModulePlaceholder pathOverride="/laporan" /></ProtectedRoute>
+          <ProtectedRoute allowedRoles={['admin']}><ReportsManagement /></ProtectedRoute>
         } />
       </Route>
 
