@@ -249,7 +249,7 @@ export default function BorrowingDetail() {
 
   // Safe QR Payload
   const qrReceiptPayload = JSON.stringify({
-    system: 'SiPenitip-Vinix',
+    system: 'Vinix-Warehouse-Management-System',
     type: 'BORROWING_RECEIPT',
     code: borrowing.transaction_code,
     id: borrowing.id

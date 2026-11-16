@@ -11,12 +11,6 @@ import AuthCallback from './pages/AuthCallback';
 
 // App Pages
 import Dashboard from './pages/Dashboard';
-import NewDeposit from './pages/NewDeposit';
-import DepositCard from './pages/DepositCard';
-import ActiveDeposits from './pages/ActiveDeposits';
-import Pickup from './pages/Pickup';
-import Visitors from './pages/Visitors';
-import DepositHistory from './pages/DepositHistory';
 import Profile from './pages/Profile';
 
 // Inventory Pages (Phase E)
@@ -37,6 +31,7 @@ import BorrowingList from './pages/borrowing/BorrowingList';
 import CreateBorrowing from './pages/borrowing/CreateBorrowing';
 import BorrowingDetail from './pages/borrowing/BorrowingDetail';
 import ReturnProcessing from './pages/borrowing/ReturnProcessing';
+import BorrowingHistory from './pages/borrowing/BorrowingHistory';
 
 // Admin Pages
 import StaffManagement from './pages/admin/StaffManagement';
@@ -83,13 +78,8 @@ export default function App() {
         <Route path="/peminjaman/:id/pengembalian" element={<ReturnProcessing />} />
         <Route path="/pengembalian" element={<ReturnProcessing />} />
 
-        {/* Legacy Deposit Routes (Preserved for Historical Audit) */}
-        <Route path="/penitipan-baru" element={<NewDeposit />} />
-        <Route path="/kartu-penitipan" element={<DepositCard />} />
-        <Route path="/barang-dititipkan" element={<ActiveDeposits />} />
-        <Route path="/pengambilan" element={<Pickup />} />
-        <Route path="/pengunjung" element={<Visitors />} />
-        <Route path="/riwayat" element={<DepositHistory />} />
+        {/* Riwayat Peminjaman & Pengembalian Gudang */}
+        <Route path="/riwayat" element={<BorrowingHistory />} />
         <Route path="/profil" element={<Profile />} />
 
         {/* Admin Only */}

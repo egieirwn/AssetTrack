@@ -24,6 +24,7 @@ export default function CustomSelect({
   ariaLabel,
   autoWidth = false,
   dropdownWidth,
+  dropdownMaxWidth = '380px',
   ...rest
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -183,7 +184,7 @@ export default function CustomSelect({
             top: 'calc(100% + 4px)',
             left: 0,
             minWidth: dropdownWidth || '100%',
-            maxWidth: '380px',
+            maxWidth: dropdownMaxWidth,
             maxHeight: '260px',
             overflowY: 'auto',
             background: '#FFFFFF',
