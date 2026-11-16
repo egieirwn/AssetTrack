@@ -19,7 +19,7 @@ export default function Sidebar() {
   return (
     <aside className="atrium-sidebar" aria-label="Navigasi Utama Gudang">
       {/* Brand Icon Badge */}
-      <NavLink to="/dashboard" className="atrium-sidebar-logo" title="SiPenitip · PT Vinix Seven Aurum">
+      <NavLink to="/dashboard" className="atrium-sidebar-logo" title="Sistem Manajemen Inventaris & Peminjaman Barang · PT Vinix Seven Aurum">
         <Shield size={22} />
       </NavLink>
 
@@ -87,10 +87,10 @@ export default function Sidebar() {
         <NavLink
           to="/riwayat"
           className={({ isActive }) => `atrium-nav-item${isActive ? ' active' : ''}`}
-          aria-label="Riwayat Operasional"
+          aria-label="Riwayat Peminjaman"
         >
           <History size={20} />
-          <span className="atrium-tooltip">Riwayat Transaksi</span>
+          <span className="atrium-tooltip">Riwayat Peminjaman</span>
         </NavLink>
 
         {/* Admin-only Modules */}
