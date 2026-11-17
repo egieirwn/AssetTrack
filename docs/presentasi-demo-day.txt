@@ -1,0 +1,432 @@
+================================================================================
+   MATERI PRESENTASI DEMO DAY — 27 NOVEMBER 2026
+   Sistem Informasi Manajemen Inventaris & Peminjaman Barang
+   PT Vinix Seven Aurum
+================================================================================
+   Durasi Total : ±4 Menit (Poin 1–3 dan 5, tanpa Demo)
+   Pembicara    : [ISI NAMA ANDA]
+   Aplikasi     : Warehouse Inventory & Borrowing Management System
+   Teknologi    : React 19 + Vite 6 + Supabase PostgreSQL
+================================================================================
+
+
+================================================================================
+  POIN 1 — PERMASALAHAN
+  Durasi : ±1 Menit
+================================================================================
+
+[ MATERI ]
+
+Permasalahan yang ingin diselesaikan:
+
+  Perusahaan atau organisasi yang memiliki gudang perlengkapan operasional
+  — seperti laptop, proyektor, kamera, kabel, dan alat kerja lainnya —
+  seringkali menghadapi masalah dalam pencatatan keluar-masuk barang yang
+  dipinjam oleh karyawan.
+
+Kondisi nyata yang terjadi saat ini:
+
+  - Pencatatan peminjaman dilakukan secara manual (buku tulis / Excel)
+  - Tidak ada visibilitas real-time: petugas gudang tidak tahu barang
+    mana yang sedang dipinjam, oleh siapa, dan sejak kapan
+  - Tidak ada sistem pengingat keterlambatan pengembalian (overdue)
+  - Kondisi fisik barang saat dikembalikan tidak tercatat secara sistematis
+    (mana yang kembali baik, mana yang rusak)
+  - Tidak ada jejak audit (audit trail) yang dapat dipertanggungjawabkan
+  - Risiko kehilangan barang tinggi karena tidak ada bukti peminjaman resmi
+
+Kondisi ideal yang diharapkan:
+
+  - Semua transaksi peminjaman tercatat secara digital dan real-time
+  - Ada bukti peminjaman resmi yang dapat dicetak (dengan QR Code)
+  - Petugas dapat memantau status stok kapan saja tanpa perlu mengecek
+    fisik gudang satu per satu
+  - Setiap pengembalian barang langsung memperbarui saldo stok otomatis
+  - Ada laporan yang bisa diekspor untuk keperluan manajemen
+
+Kesenjangan (Gap):
+
+  MANUAL & RAWAN KESALAHAN  ──────────────────>  DIGITAL & TERKELOLA
+  (Buku/Excel, tidak real-time)                  (Web App, real-time, audit trail)
+
+Data pendukung:
+  - Penelitian McKinsey (2022): Perusahaan yang masih menggunakan
+    pencatatan manual untuk manajemen aset mengalami kehilangan aset
+    rata-rata 20% lebih tinggi dibandingkan yang menggunakan sistem digital.
+  [⚠ CATATAN: Verifikasi atau ganti dengan data yang dapat Anda buktikan]
+
+--------------------------------------------------------------------------------
+
+[ NASKAH — Yang Bisa Diucapkan Langsung ]
+
+  "Bayangkan Anda adalah petugas gudang di sebuah perusahaan. Setiap hari,
+   karyawan datang meminjam laptop, proyektor, kamera, dan berbagai
+   perlengkapan kerja lainnya. Selama ini, semua dicatat di buku tulis
+   atau spreadsheet Excel.
+
+   Masalahnya: ketika seseorang bertanya 'mana laptop nomor 3?',
+   Anda harus buka buku, cari satu per satu. Ketika barang dikembalikan
+   dalam kondisi rusak, tidak ada catatan resminya. Dan ketika ada barang
+   yang sudah dipinjam 2 minggu tapi belum dikembalikan, tidak ada yang
+   tahu.
+
+   Inilah gap yang ingin kami selesaikan — dari pencatatan manual yang
+   rawan kehilangan data, menuju sistem digital yang real-time dan
+   dapat dipertanggungjawabkan."
+
+--------------------------------------------------------------------------------
+
+[ ARAHAN VISUAL ]
+
+  Tampilkan:
+  - Ilustrasi/foto buku catatan manual vs tampilan dashboard aplikasi
+  - Tabel perbandingan: Manual vs Digital (3–4 poin perbedaan)
+  - Angka statistik kehilangan aset (jika ada data valid)
+
+
+================================================================================
+  POIN 2 — TARGET PENGGUNA
+  Durasi : ±1 Menit
+================================================================================
+
+[ MATERI ]
+
+Aplikasi ini ditujukan untuk dua jenis pengguna dalam satu perusahaan:
+
+---
+  PERSONA 1 — PENJAGA GUDANG (Warehouse Keeper)
+---
+
+  Identitas:
+  - Petugas operasional gudang perusahaan
+  - Bertugas setiap hari di area gudang/penyimpanan
+  - Melek teknologi dasar (bisa menggunakan browser web)
+  - Tidak memiliki latar belakang IT
+
+  Kebutuhan Utama:
+  - Mencatat peminjaman barang dengan cepat dan mudah
+  - Memproses pengembalian barang (baik penuh maupun sebagian)
+  - Mencetak bukti peminjaman resmi untuk dipegang peminjam
+  - Memantau barang apa saja yang sedang dipinjam saat ini
+
+  Permasalahan yang Dihadapi:
+  - Sering kewalahan mencatat peminjaman multi-barang sekaligus
+  - Tidak bisa membuktikan siapa yang meminjam jika barang hilang
+  - Tidak ada peringatan otomatis untuk barang yang terlambat dikembalikan
+
+  Tujuan/Harapan:
+  - Proses catat-pinjam lebih cepat dan tidak membuatan antrian
+  - Ada bukti fisik (struk cetak + QR Code) untuk setiap transaksi
+  - Stok barang selalu akurat tanpa harus hitung manual
+
+  Relevansi Aplikasi:
+  - Form peminjaman multi-barang yang intuitif
+  - Cetak bukti pinjam langsung dari browser
+  - Dashboard real-time untuk pantau kondisi stok dan status peminjaman
+
+---
+  PERSONA 2 — ADMINISTRATOR
+---
+
+  Identitas:
+  - Kepala gudang atau staf IT/administrasi perusahaan
+  - Bertanggung jawab atas pengelolaan data master dan pelaporan
+  - Memerlukan visibilitas penuh atas seluruh operasional gudang
+
+  Kebutuhan Utama:
+  - Mengelola data master: kategori barang, lokasi rak, daftar petugas
+  - Melihat laporan dan mengekspor data untuk manajemen
+  - Memantau aktivitas seluruh petugas gudang
+
+  Permasalahan yang Dihadapi:
+  - Tidak ada laporan terintegrasi yang mudah diakses
+  - Sulit memantau performa operasional gudang secara keseluruhan
+  - Tidak bisa dengan mudah menambah/menonaktifkan akun petugas
+
+  Tujuan/Harapan:
+  - Laporan operasional yang bisa diunduh kapan saja
+  - Kontrol penuh atas data master sistem
+  - Visibilitas aktivitas seluruh petugas
+
+  Relevansi Aplikasi:
+  - Halaman laporan dengan fitur ekspor CSV
+  - Manajemen akun staf lengkap
+  - Akses ke seluruh log aktivitas sistem
+
+--------------------------------------------------------------------------------
+
+[ NASKAH — Yang Bisa Diucapkan Langsung ]
+
+  "Aplikasi ini kami rancang untuk dua pengguna utama.
+
+   Pertama, Penjaga Gudang — petugas yang setiap hari berhadapan langsung
+   dengan barang dan peminjam. Mereka butuh solusi yang cepat, mudah
+   digunakan, dan menghasilkan bukti fisik yang bisa dipegang.
+
+   Kedua, Administrator — yang membutuhkan visibilitas penuh: siapa
+   yang meminjam apa, kondisi stok, dan laporan yang bisa dibawa ke rapat.
+
+   Keduanya bekerja dalam satu sistem yang sama, namun dengan akses dan
+   tampilan yang disesuaikan dengan peran masing-masing."
+
+--------------------------------------------------------------------------------
+
+[ ARAHAN VISUAL ]
+
+  Tampilkan:
+  - Dua kartu User Persona (bisa berupa slide dengan ikon + poin-poin)
+  - Screenshot halaman yang relevan untuk masing-masing persona
+    * Penjaga Gudang: Form Peminjaman, Cetak Bukti
+    * Admin: Halaman Laporan, Manajemen Staf
+
+
+================================================================================
+  POIN 3 — SOLUSI
+  Durasi : ±1 Menit
+================================================================================
+
+[ MATERI ]
+
+Nama Aplikasi  : Warehouse Inventory & Borrowing Management System
+Nama Project   : vinix-warehouse-management-system
+Perusahaan     : PT Vinix Seven Aurum
+Stack Teknologi: React 19 · Vite 6 · Supabase PostgreSQL · Vanilla CSS
+                 Atrium Design System · Lucide React · QRCode.React
+
+---
+
+Bagaimana aplikasi menyelesaikan permasalahan?
+
+  MASALAH 1: Tidak ada pencatatan digital peminjaman
+  SOLUSI    : Form Peminjaman Multi-Barang dengan kode tiket unik
+              Format: BRW-YYYYMMDD-XXXX (contoh: BRW-20261117-0001)
+              Mendukung banyak jenis barang dalam satu transaksi
+
+  MASALAH 2: Tidak ada bukti peminjaman resmi
+  SOLUSI    : Bukti Pinjam Siap Cetak dengan QR Code
+              Dapat dicetak langsung dari browser
+              QR Code memudahkan pencarian cepat saat pengembalian
+
+  MASALAH 3: Tidak tahu barang apa yang sedang dipinjam
+  SOLUSI    : Dashboard Real-time
+              Metrik: Total SKU aktif, unit dipinjam, unit rusak,
+              transaksi berjalan, transaksi overdue (terlambat)
+
+  MASALAH 4: Kondisi fisik barang tidak tercatat
+  SOLUSI    : Proses Pengembalian dengan Rekonsiliasi Kondisi
+              Barang kembali "Baik" → stok kembali available
+              Barang kembali "Rusak" → masuk saldo damaged (tidak dipinjam lagi)
+
+  MASALAH 5: Tidak ada jejak audit
+  SOLUSI    : Buku Besar Mutasi Stok (Stock Ledger) append-only
+              Setiap pergerakan barang tercatat permanen (tidak bisa dihapus)
+              Jenis mutasi: stock_in, borrowed, returned_good, returned_damaged,
+              adjustment, cancelled
+
+---
+
+Fitur Utama Aplikasi (8 Modul):
+
+  1. Dashboard Pemantauan — Metrik real-time kondisi gudang
+  2. Manajemen Inventaris — Master barang (individual & massal/bulk)
+  3. Direktori Peminjam — Data karyawan peminjam
+  4. Peminjaman Multi-Barang — Transaksi dengan validasi stok otomatis
+  5. Proses Pengembalian — Parsial & penuh, rekonsiliasi kondisi fisik
+  6. Riwayat Transaksi — Audit lengkap semua transaksi
+  7. Buku Besar Stok — Ledger mutasi stok permanen
+  8. Laporan & Ekspor CSV — Laporan operasional yang bisa diunduh
+
+---
+
+Keunggulan & Nilai Tambah:
+
+  ✓ Berbasis Web — Dapat diakses dari perangkat apa pun (PC, tablet)
+  ✓ Row Level Security (RLS) — Keamanan data di tingkat database
+  ✓ Stored Procedure / RPC — Transaksi atomik, tidak ada data setengah-jadi
+  ✓ RBAC (Role-Based Access Control) — 2 peran: Penjaga Gudang & Admin
+  ✓ Ekspor CSV anti-injection — Format aman untuk dibuka di Excel
+  ✓ QR Code Scanner — Proses pengembalian lebih cepat via scan
+
+---
+
+Sebelum vs Sesudah:
+
+  SEBELUM                          SESUDAH
+  ─────────────────────────────    ─────────────────────────────
+  Buku tulis / Excel manual        Form digital dengan validasi
+  Tidak ada bukti resmi            Bukti cetak + QR Code
+  Stok tidak akurat                Stok real-time & otomatis
+  Tidak ada peringatan overdue     Label overdue otomatis
+  Tidak ada laporan terintegrasi   Ekspor CSV kapan saja
+  Tidak ada jejak audit            Ledger permanen append-only
+
+--------------------------------------------------------------------------------
+
+[ NASKAH — Yang Bisa Diucapkan Langsung ]
+
+  "Solusi yang kami bangun adalah sebuah aplikasi web manajemen gudang
+   yang mendigitalisasi seluruh siklus hidup barang — dari pencatatan
+   stok masuk, peminjaman multi-barang, pengembalian dengan rekonsiliasi
+   kondisi fisik, hingga laporan ekspor CSV.
+
+   Setiap transaksi peminjaman menghasilkan kode tiket unik dan bukti
+   cetak dengan QR Code. Ketika barang dikembalikan, petugas tinggal
+   scan QR Code, lalu tentukan apakah barang kembali dalam kondisi baik
+   atau rusak — sistem otomatis memperbarui stok.
+
+   Semua ini dibangun di atas React 19 dan Supabase, dengan keamanan
+   tingkat database melalui Row Level Security, sehingga data tidak
+   bisa diakses oleh pengguna yang tidak berwenang."
+
+--------------------------------------------------------------------------------
+
+[ ARAHAN VISUAL ]
+
+  Tampilkan:
+  - Tabel Sebelum vs Sesudah (6 baris)
+  - Screenshot Dashboard dengan metrik real-time
+  - Screenshot Form Peminjaman multi-barang
+  - Screenshot Bukti Cetak / Kartu Pinjam dengan QR Code
+  - Diagram alur sederhana:
+    [Input Barang] → [Peminjaman] → [Pengembalian] → [Laporan]
+
+
+================================================================================
+  POIN 5 — KESIMPULAN DAN RENCANA PENGEMBANGAN
+  Durasi : ±1 Menit
+================================================================================
+
+[ MATERI ]
+
+---
+  KESIMPULAN
+---
+
+Permasalahan yang berhasil diselesaikan:
+
+  Aplikasi ini berhasil mengubah proses manajemen gudang dari yang
+  sebelumnya manual dan rawan kehilangan data, menjadi sistem digital
+  yang terstruktur, real-time, dan dapat diaudit.
+
+Nilai manfaat bagi target pengguna:
+
+  → Penjaga Gudang: Hemat waktu pencatatan, ada bukti fisik resmi,
+    stok selalu akurat tanpa hitung manual
+  → Administrator: Visibilitas penuh, laporan siap ekspor,
+    kontrol akses staf yang terpusat
+
+Pencapaian utama pengembangan:
+
+  ✓ 8 modul fungsional aktif
+  ✓ RBAC dengan 2 peran (Penjaga Gudang & Admin)
+  ✓ Transaksi atomik via Supabase RPC (tidak ada data korup)
+  ✓ Buku besar mutasi stok permanen (append-only ledger)
+  ✓ Build produksi berhasil (npm run build — exit code 0)
+  ✓ 8/8 unit test lulus (file: tests/test_warehouse_system.cjs)
+  ✓ Fitur ekspor CSV dengan sanitasi formula injection
+  ✓ QR Code pada setiap bukti peminjaman
+
+---
+  KEKURANGAN & KETERBATASAN SAAT INI
+---
+
+  ⚠ Belum ada notifikasi otomatis untuk barang overdue (hanya label visual)
+  ⚠ Belum ada fitur pencarian barcode fisik (hanya QR Code digital)
+  ⚠ Belum ada integrasi email/WhatsApp untuk pengingat ke peminjam
+  ⚠ Aplikasi belum diuji beban (load testing) untuk penggunaan skala besar
+  ⚠ Belum ada fitur backup dan restore database mandiri untuk pengguna
+
+---
+  RENCANA PENGEMBANGAN SELANJUTNYA
+---
+
+  Phase G — Notifikasi Otomatis (Jangka Pendek):
+  - Kirim email/WhatsApp otomatis ke peminjam yang sudah melewati due date
+  - Notifikasi push browser untuk petugas gudang
+
+  Phase H — Pemindaian Barcode Fisik (Jangka Menengah):
+  - Dukungan barcode fisik pada aset (label stiker barcode)
+  - Scanner barcode USB/kamera untuk proses peminjaman & pengembalian lebih cepat
+
+  Phase I — Laporan Lanjutan & Dashboard Eksekutif (Jangka Menengah):
+  - Grafik tren peminjaman bulanan/tahunan
+  - Dashboard eksekutif untuk manajemen tingkat atas
+  - Ekspor laporan ke format PDF
+
+  Phase J — Mobile App (Jangka Panjang):
+  - Aplikasi mobile (Android/iOS) untuk petugas gudang lapangan
+  - Scan QR Code via kamera smartphone
+
+  Potensi pengembangan:
+  - Dapat diadaptasi untuk konteks lain:
+    * Perpustakaan (peminjaman buku)
+    * Laboratorium universitas (peminjaman alat praktikum)
+    * Properti event organizer (peminjaman perlengkapan acara)
+
+--------------------------------------------------------------------------------
+
+[ NASKAH — Yang Bisa Diucapkan Langsung ]
+
+  "Sebagai penutup, aplikasi ini telah berhasil menjawab permasalahan
+   pencatatan gudang yang selama ini dilakukan secara manual.
+
+   Dengan 8 modul yang aktif, sistem manajemen peminjaman ini memberikan
+   visibilitas penuh kepada petugas gudang dan administrator — dari stok
+   real-time, bukti pinjam dengan QR Code, hingga laporan yang bisa
+   diekspor kapan saja.
+
+   Tentu, masih ada ruang untuk berkembang. Ke depan, kami berencana
+   menambahkan notifikasi otomatis untuk barang yang terlambat dikembalikan,
+   dukungan barcode fisik, dan laporan yang lebih kaya visualisasi.
+
+   Kami percaya sistem ini tidak hanya relevan untuk PT Vinix Seven Aurum,
+   tetapi juga memiliki potensi untuk diadaptasi ke industri lain —
+   mulai dari perpustakaan, laboratorium, hingga event organizer.
+
+   Terima kasih."
+
+--------------------------------------------------------------------------------
+
+[ ARAHAN VISUAL ]
+
+  Tampilkan:
+  - Daftar pencapaian (8 poin dengan ikon centang ✓)
+  - Roadmap pengembangan (timeline sederhana Phase G → J)
+  - Slide penutup: nama aplikasi + tagline + kontak/nama tim
+
+
+================================================================================
+  RINGKASAN ALUR PRESENTASI (CHEAT SHEET)
+================================================================================
+
+  [00:00–01:00]  POIN 1 — PERMASALAHAN
+                 → Buku manual → kehilangan data → tidak real-time
+
+  [01:00–02:00]  POIN 2 — TARGET PENGGUNA
+                 → Persona Penjaga Gudang + Persona Admin
+
+  [02:00–03:00]  POIN 3 — SOLUSI
+                 → 8 modul, stack teknologi, tabel Sebelum vs Sesudah
+
+  [03:00–04:00]  POIN 5 — KESIMPULAN & RENCANA
+                 → Pencapaian, kekurangan jujur, roadmap Phase G–J
+
+
+================================================================================
+  DAFTAR HAL YANG PERLU DISIAPKAN SEBELUM PRESENTASI
+================================================================================
+
+  [ ] Screenshot Dashboard (dengan data dummy/demo yang terisi)
+  [ ] Screenshot Form Peminjaman (isi dengan data contoh realistis)
+  [ ] Screenshot Bukti Cetak dengan QR Code
+  [ ] Screenshot Halaman Laporan
+  [ ] Data statistik pendukung permasalahan (ganti placeholder McKinsey
+      dengan sumber yang dapat Anda verifikasi, atau hapus jika tidak ada)
+  [ ] Pastikan aplikasi dapat diakses live / atau siapkan video recording
+  [ ] Siapkan akun demo: satu akun penjaga gudang, satu akun admin
+  [ ] Pastikan data dummy sudah terisi di database (barang, peminjaman, dll.)
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================

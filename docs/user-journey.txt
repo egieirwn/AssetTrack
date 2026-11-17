@@ -1,0 +1,529 @@
+================================================================================
+      USER JOURNEY - SISTEM INFORMASI PENITIPAN BARANG PENGUNJUNG (SiPenitip)
+================================================================================
+Versi      : 1.0
+Tanggal    : 17 November 2026
+Aplikasi   : SiPenitip - Sistem Informasi Penitipan Barang Pengunjung Perusahaan
+================================================================================
+
+
+================================================================================
+  DAFTAR AKTOR
+================================================================================
+
+  1. SATPAM (Security Guard)
+     - Petugas keamanan di pintu masuk perusahaan
+     - Bertugas mencatat penitipan dan pengembalian barang
+     - Akses: Semua fitur operasional (deposit, pickup, daftar aktif)
+
+  2. ADMIN
+     - Administrator sistem
+     - Bertugas mengelola kategori, lokasi penyimpanan, staf, dan laporan
+     - Akses: Semua fitur operasional + fitur manajemen admin
+
+  3. PENGUNJUNG (Visitor)
+     - Tamu/pengunjung yang datang ke perusahaan
+     - Menyerahkan barang bawaan untuk dititipkan
+     - Tidak memiliki akun di sistem (hanya tercatat sebagai data)
+
+
+================================================================================
+  USER JOURNEY 1: SATPAM - LOGIN & AKSES SISTEM
+================================================================================
+
+  TUJUAN     : Satpam dapat masuk ke sistem dan mengakses dashboard
+  PEMICU     : Satpam mulai shift kerja dan membuka aplikasi SiPenitip
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Satpam membuka browser dan mengakses URL aplikasi SiPenitip
+          | Halaman: Login Page (/)
+          |
+  Step 2 | Satpam memasukkan:
+          |   - Email    : satpam@perusahaan.com
+          |   - Password : xxxxxxxx
+          | Lalu klik tombol "Masuk"
+          |
+  Step 3 | Sistem memverifikasi kredensial via Supabase Auth
+          |   [SUKSES] -> Redirect ke Dashboard (/dashboard)
+          |   [GAGAL]  -> Tampil pesan error "Email atau password salah"
+          |
+  Step 4 | Satpam melihat Dashboard berisi:
+          |   - Ringkasan jumlah titipan aktif hari ini
+          |   - Jumlah pengunjung hari ini
+          |   - Jumlah titipan selesai hari ini
+          |   - Shortcut ke menu utama
+          |
+  Step 5 | Satpam siap menggunakan aplikasi melalui menu Sidebar
+
+  HASIL      : Satpam berhasil login dan dapat melihat kondisi titipan harian
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 2: SATPAM - PENITIPAN BARANG BARU
+================================================================================
+
+  TUJUAN     : Satpam mencatat pengunjung yang menitipkan barang
+  PEMICU     : Pengunjung datang ke meja satpam dan ingin menitipkan barang
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Satpam klik menu "Titipan Baru" pada Sidebar
+          | Halaman: New Deposit (/deposits/new)
+          |
+  Step 2 | BAGIAN A - DATA PENGUNJUNG
+          | Satpam memilih pengunjung:
+          |   [Opsi 1] Cari pengunjung lama berdasarkan nama/KTP
+          |   [Opsi 2] Input pengunjung baru:
+          |     - Nama Lengkap     : (wajib)
+          |     - Nomor KTP/Identitas : (wajib)
+          |     - Nomor HP         : (opsional)
+          |     - Instansi/Perusahaan : (opsional)
+          |     - Keperluan        : (wajib - dropdown)
+          |
+  Step 3 | BAGIAN B - DATA BARANG
+          | Satpam menambahkan daftar barang yang dititipkan:
+          |   - Nama Barang       : (wajib)
+          |   - Kategori          : (dropdown: Tas, Helm, HP, dll.)
+          |   - Deskripsi/Warna   : (opsional, untuk identifikasi)
+          |   - Jumlah            : (default 1)
+          |   Klik "Tambah Barang" untuk menambah barang berikutnya
+          |
+  Step 4 | BAGIAN C - LOKASI PENYIMPANAN
+          | Satpam memilih lokasi/loker penyimpanan tersedia:
+          |   - Dropdown rak/loker yang masih tersedia
+          |   - Sistem otomatis memfilter lokasi penuh
+          |
+  Step 5 | Satpam klik tombol "Simpan Titipan"
+          | Sistem memproses via RPC rpc_create_deposit():
+          |   - Generate kode transaksi unik (format: DEP-YYYYMMDD-XXXX)
+          |   - Simpan data pengunjung (baru/update)
+          |   - Simpan detail barang
+          |   - Update status lokasi penyimpanan -> 'occupied'
+          |   - Catat log transaksi
+          |
+  Step 6 | Sistem menampilkan Kartu Titipan (Deposit Card):
+          |   - Kode Transaksi (QR Code)
+          |   - Nama Pengunjung
+          |   - Daftar Barang
+          |   - Lokasi Penyimpanan
+          |   - Waktu Penitipan
+          |   - Tombol "Cetak Kartu"
+          |
+  Step 7 | Satpam mencetak kartu dan menyerahkan ke pengunjung
+          | Satpam menyimpan barang di loker/rak sesuai yang tertera
+
+  HASIL      : Barang berhasil dicatat, kode QR dicetak, barang disimpan
+  CATATAN    : Kode transaksi (QR Code) adalah bukti pengambilan kembali
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 3: SATPAM - PENGAMBILAN BARANG (PICKUP)
+================================================================================
+
+  TUJUAN     : Satpam memproses pengambilan barang oleh pengunjung
+  PEMICU     : Pengunjung kembali ke meja satpam untuk mengambil titipannya
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Satpam klik menu "Ambil Barang" pada Sidebar
+          | Halaman: Pickup (/pickup)
+          |
+  Step 2 | IDENTIFIKASI TRANSAKSI
+          | Satpam mencari transaksi dengan salah satu cara:
+          |   [Cara 1] Scan QR Code dari kartu titipan pengunjung
+          |             -> Aktifkan kamera, arahkan ke QR Code
+          |   [Cara 2] Input manual kode transaksi (DEP-YYYYMMDD-XXXX)
+          |   [Cara 3] Cari berdasarkan nama pengunjung
+          |
+  Step 3 | Sistem menampilkan detail transaksi:
+          |   - Kode Transaksi
+          |   - Nama Pengunjung
+          |   - Daftar Barang (dengan checklist)
+          |   - Lokasi Penyimpanan
+          |   - Waktu Penitipan
+          |
+  Step 4 | VERIFIKASI IDENTITAS
+          | Satpam memeriksa apakah yang mengambil adalah:
+          |   [Opsi A] Pengunjung sendiri -> Cocokkan KTP
+          |   [Opsi B] Perwakilan (orang lain)
+          |             -> Cek Surat Kuasa / Dokumen Bukti Kuasa
+          |             -> Input nama & KTP perwakilan ke sistem
+          |
+  Step 5 | CHECKLIST BARANG
+          | Satpam mencentang setiap barang yang dikembalikan:
+          |   [x] Tas Ransel Hitam
+          |   [x] Helm Full Face Merah
+          |   [ ] ... (barang lain)
+          | Pastikan semua barang tercentang sebelum konfirmasi
+          |
+  Step 6 | Satpam klik "Konfirmasi Pengambilan"
+          | Sistem memproses via RPC rpc_complete_pickup():
+          |   - Update status transaksi -> 'completed'
+          |   - Catat waktu pengambilan
+          |   - Catat identitas pengambil (sendiri/perwakilan)
+          |   - Update lokasi penyimpanan -> 'available'
+          |   - Catat log transaksi
+          |
+  Step 7 | Sistem menampilkan konfirmasi sukses
+          | Satpam menyerahkan semua barang ke pengunjung/perwakilan
+
+  HASIL      : Barang berhasil diserahkan, lokasi penyimpanan kembali kosong
+  CATATAN    : Jika perwakilan, data surat kuasa wajib dicatat di sistem
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 4: SATPAM - MELIHAT DAFTAR TITIPAN AKTIF
+================================================================================
+
+  TUJUAN     : Satpam memantau semua barang yang sedang dititipkan
+  PEMICU     : Satpam ingin mengecek status titipan yang belum diambil
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Satpam klik menu "Titipan Aktif" pada Sidebar
+          | Halaman: Active Deposits (/deposits/active)
+          |
+  Step 2 | Sistem menampilkan tabel daftar titipan aktif:
+          |   - Kode Transaksi
+          |   - Nama Pengunjung
+          |   - Jumlah Barang
+          |   - Lokasi Penyimpanan
+          |   - Waktu Masuk
+          |   - Durasi (sudah berapa lama)
+          |
+  Step 3 | Satpam dapat melakukan:
+          |   - Filter berdasarkan lokasi/tanggal
+          |   - Klik baris untuk melihat detail
+          |   - Langsung proses Pickup dari halaman ini
+          |
+  HASIL      : Satpam mengetahui semua titipan yang masih aktif
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 5: SATPAM - MELIHAT RIWAYAT TITIPAN
+================================================================================
+
+  TUJUAN     : Satpam melihat riwayat semua transaksi yang sudah selesai
+  PEMICU     : Satpam perlu mengecek histori transaksi tertentu
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Satpam klik menu "Riwayat" pada Sidebar
+          | Halaman: Deposit History (/deposits/history)
+          |
+  Step 2 | Sistem menampilkan daftar transaksi selesai dengan filter:
+          |   - Filter tanggal (dari - sampai)
+          |   - Filter nama pengunjung
+          |   - Filter kode transaksi
+          |
+  Step 3 | Satpam dapat melihat detail setiap transaksi:
+          |   - Semua data penitipan
+          |   - Waktu masuk dan waktu keluar
+          |   - Identitas pengambil (sendiri/perwakilan)
+          |
+  HASIL      : Satpam dapat melacak histori transaksi penitipan
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 6: SATPAM - LUPA PASSWORD
+================================================================================
+
+  TUJUAN     : Satpam dapat mereset password yang terlupakan
+  PEMICU     : Satpam tidak bisa login karena lupa password
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Di halaman Login, satpam klik link "Lupa Password?"
+          | Halaman: Forgot Password (/forgot-password)
+          |
+  Step 2 | Satpam memasukkan email akun yang terdaftar
+          | Klik "Kirim Link Reset"
+          |
+  Step 3 | Sistem mengirim email berisi link reset password via Supabase
+          |
+  Step 4 | Satpam membuka email, klik link "Reset Password"
+          | Halaman: Reset Password (/reset-password)
+          |
+  Step 5 | Satpam memasukkan password baru (2x konfirmasi)
+          | Klik "Simpan Password Baru"
+          |
+  Step 6 | Sistem memperbarui password, satpam diarahkan ke Login
+          | Satpam login dengan password baru
+
+  HASIL      : Satpam berhasil reset password dan dapat login kembali
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 7: ADMIN - MANAJEMEN KATEGORI BARANG
+================================================================================
+
+  TUJUAN     : Admin mengelola kategori barang yang dapat dititipkan
+  PEMICU     : Ada kebutuhan tambah/ubah/hapus kategori barang
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Admin login dengan akun role 'admin'
+          | Klik menu "Kategori Barang" pada Sidebar (hanya tampil untuk admin)
+          | Halaman: Item Categories (/admin/categories)
+          |
+  Step 2 | TAMBAH KATEGORI
+          |   - Klik tombol "+ Tambah Kategori"
+          |   - Isi Nama Kategori (contoh: "Laptop", "Dokumen Penting")
+          |   - Isi Deskripsi (opsional)
+          |   - Klik "Simpan"
+          |
+  Step 3 | EDIT KATEGORI
+          |   - Klik ikon edit pada baris kategori
+          |   - Ubah nama/deskripsi
+          |   - Klik "Simpan Perubahan"
+          |
+  Step 4 | HAPUS KATEGORI
+          |   - Klik ikon hapus pada baris kategori
+          |   - Konfirmasi penghapusan
+          |   - Kategori dihapus (jika tidak ada barang yang menggunakannya)
+
+  HASIL      : Daftar kategori barang terupdate sesuai kebutuhan operasional
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 8: ADMIN - MANAJEMEN LOKASI PENYIMPANAN
+================================================================================
+
+  TUJUAN     : Admin mengelola rak/loker tempat penyimpanan barang titipan
+  PEMICU     : Ada penambahan/perubahan rak atau loker penyimpanan
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Admin klik menu "Lokasi Penyimpanan" pada Sidebar
+          | Halaman: Storage Locations (/admin/storage)
+          |
+  Step 2 | Admin melihat daftar semua lokasi beserta status:
+          |   - Kode Lokasi (contoh: RAK-A1, LOKER-01)
+          |   - Nama/Deskripsi Lokasi
+          |   - Status: "Tersedia" / "Terisi" / "Nonaktif"
+          |   - Kapasitas
+          |
+  Step 3 | TAMBAH LOKASI BARU
+          |   - Klik "+ Tambah Lokasi"
+          |   - Isi Kode Lokasi, Nama, Kapasitas, Tipe
+          |   - Klik "Simpan"
+          |
+  Step 4 | NONAKTIFKAN LOKASI
+          |   - Klik ikon nonaktif pada lokasi yang rusak/tidak terpakai
+          |   - Lokasi tidak akan muncul di dropdown saat penitipan baru
+
+  HASIL      : Lokasi penyimpanan terkelola dengan status yang akurat
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 9: ADMIN - MANAJEMEN STAF
+================================================================================
+
+  TUJUAN     : Admin mengelola akun staf (satpam) yang menggunakan sistem
+  PEMICU     : Ada penambahan staf baru, pergantian staf, atau staf resign
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Admin klik menu "Manajemen Staf" pada Sidebar
+          | Halaman: Staff Management (/admin/staff)
+          |
+  Step 2 | TAMBAH STAF BARU
+          |   - Klik "+ Tambah Staf"
+          |   - Isi data staf:
+          |     * Nama Lengkap  : (wajib)
+          |     * Email         : (wajib, akan digunakan untuk login)
+          |     * ID Karyawan   : (wajib, contoh: SAT-001)
+          |     * Role          : satpam / admin
+          |   - Klik "Kirim Undangan"
+          |   - Sistem mengirim email undangan + link set password ke staf
+          |
+  Step 3 | NONAKTIFKAN STAF
+          |   - Klik ikon nonaktif pada staf yang sudah tidak bekerja
+          |   - Akun staf diblokir, tidak bisa login
+          |
+  Step 4 | RESET PASSWORD STAF
+          |   - Klik "Reset Password" pada baris staf
+          |   - Email reset password dikirim ke akun staf tersebut
+
+  HASIL      : Akun staf terkelola, hanya staf aktif yang bisa mengakses sistem
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 10: ADMIN - LAPORAN & STATISTIK
+================================================================================
+
+  TUJUAN     : Admin memantau performa operasional penitipan barang
+  PEMICU     : Admin ingin melihat laporan harian/bulanan
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  Step 1 | Admin klik menu "Laporan" pada Sidebar
+          | Halaman: Reports (/admin/reports)
+          |
+  Step 2 | Admin memilih rentang waktu laporan:
+          |   - Harian (pilih tanggal tertentu)
+          |   - Mingguan
+          |   - Bulanan
+          |
+  Step 3 | Sistem menampilkan statistik:
+          |   - Total transaksi penitipan
+          |   - Total pengunjung unik
+          |   - Rata-rata durasi penitipan
+          |   - Kategori barang paling sering dititipkan
+          |   - Tingkat penggunaan lokasi penyimpanan
+          |   - Jumlah transaksi per satpam
+          |
+  Step 4 | Admin dapat mengekspor laporan ke format yang tersedia
+
+  HASIL      : Admin memiliki gambaran lengkap operasional penitipan barang
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 11: PENGUNJUNG - ALUR LENGKAP PENITIPAN & PENGAMBILAN
+================================================================================
+
+  TUJUAN     : Menggambarkan pengalaman pengunjung dari sudut pandang mereka
+  CATATAN    : Pengunjung tidak menggunakan aplikasi langsung, semua dicatat
+               oleh Satpam. Ini adalah journey dari perspektif pengunjung.
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  FASE 1: KEDATANGAN & PENITIPAN
+  ---------------------------------
+  Step 1 | Pengunjung tiba di gerbang/lobi perusahaan
+          |
+  Step 2 | Satpam meminta pengunjung untuk menitipkan barang bawaan
+          | (sesuai kebijakan perusahaan: tas, hp, dll.)
+          |
+  Step 3 | Pengunjung menyerahkan barang dan identitas (KTP) ke satpam
+          |
+  Step 4 | Satpam mencatat data pengunjung dan barang di SiPenitip
+          | (User Journey 2 - Penitipan Barang Baru)
+          |
+  Step 5 | Pengunjung menerima KARTU TITIPAN berisi:
+          |   - Kode Transaksi
+          |   - QR Code
+          |   - Daftar barang yang dititipkan
+          |   - Lokasi penyimpanan
+          |
+  Step 6 | Pengunjung menyimpan kartu titipan dengan baik
+          | Pengunjung masuk ke area perusahaan untuk urusan/keperluan
+
+  FASE 2: PENGAMBILAN BARANG
+  ---------------------------------
+  Step 7 | Pengunjung selesai berurusan dan kembali ke meja satpam
+          |
+  Step 8 | Pengunjung menunjukkan KARTU TITIPAN (QR Code) ke satpam
+          |
+  Step 9 | Satpam scan QR Code dan memverifikasi identitas pengunjung
+          |
+  Step 10| Satpam mencocokkan daftar barang dan menyerahkan satu per satu
+           |
+  Step 11| Pengunjung memeriksa kelengkapan barang
+           |
+  Step 12| Proses selesai, pengunjung meninggalkan area perusahaan
+
+  ALTERNATIF - PENGAMBILAN OLEH PERWAKILAN:
+  ---------------------------------
+  Step 8b | Pengunjung tidak bisa mengambil sendiri (sakit, darurat, dll.)
+           | Mengirimkan perwakilan dengan membawa:
+           |   - Kartu titipan / kode transaksi
+           |   - Surat Kuasa / Dokumen Bukti Kuasa
+           |   - KTP perwakilan
+           |
+  Step 9b | Satpam memverifikasi dokumen kuasa dan identitas perwakilan
+           |
+  Step 10b| Satpam mencatat data perwakilan di sistem sebelum menyerahkan barang
+           |
+  Step 11b| Barang diserahkan ke perwakilan, proses selesai
+
+  HASIL      : Pengunjung mendapatkan kembali semua barang titipannya dengan
+               aman dan terverifikasi
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  ALUR STATUS TRANSAKSI
+================================================================================
+
+  Setiap transaksi penitipan melewati status berikut:
+
+  [PENDING] ──────────────────> [ACTIVE] ──────────────────> [COMPLETED]
+     |                             |                               |
+  Transaksi baru               Barang sudah                  Barang sudah
+  dibuat oleh satpam           disimpan di loker             diambil kembali
+
+
+  Status Lokasi Penyimpanan:
+  [AVAILABLE] ────────> [OCCUPIED] ────────> [AVAILABLE]
+  (Kosong/Tersedia)    (Terisi saat ada      (Kembali kosong
+                        titipan aktif)        setelah diambil)
+
+
+================================================================================
+  FITUR KEAMANAN SISTEM
+================================================================================
+
+  1. Autentikasi
+     - Login menggunakan email + password via Supabase Auth
+     - Session token otomatis expired
+
+  2. Otorisasi Berbasis Role
+     - Role SATPAM : Akses fitur operasional saja
+     - Role ADMIN  : Akses penuh (operasional + manajemen)
+     - Halaman admin tidak dapat diakses oleh satpam
+
+  3. QR Code Verifikasi
+     - Setiap transaksi memiliki kode unik yang terenkripsi
+     - QR Code digunakan sebagai bukti pengambilan
+
+  4. Audit Trail
+     - Semua aksi tercatat di tabel transaction_logs
+     - Mencatat siapa, apa, dan kapan setiap perubahan terjadi
+
+  5. Validasi Perwakilan
+     - Pengambilan oleh orang lain wajib disertai surat kuasa
+     - Data perwakilan (nama + KTP) dicatat di sistem
+
+
+================================================================================
+  RINGKASAN HALAMAN APLIKASI
+================================================================================
+
+  HALAMAN PUBLIK (tanpa login):
+  - /                     -> Redirect ke /login
+  - /login                -> Halaman Login
+  - /forgot-password      -> Halaman Lupa Password
+  - /reset-password       -> Halaman Reset Password
+  - /auth/callback        -> Callback verifikasi email
+
+  HALAMAN SATPAM & ADMIN:
+  - /dashboard            -> Dashboard utama
+  - /deposits/new         -> Form titipan baru
+  - /deposits/active      -> Daftar titipan aktif
+  - /deposits/history     -> Riwayat semua transaksi
+  - /pickup               -> Proses pengambilan barang
+  - /visitors             -> Data pengunjung
+  - /profile              -> Profil & pengaturan akun
+
+  HALAMAN KHUSUS ADMIN:
+  - /admin/categories     -> Manajemen kategori barang
+  - /admin/storage        -> Manajemen lokasi penyimpanan
+  - /admin/staff          -> Manajemen akun staf
+  - /admin/reports        -> Laporan & statistik
+
+
+================================================================================
+  END OF DOCUMENT
+================================================================================
