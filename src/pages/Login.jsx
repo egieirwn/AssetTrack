@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, user, isConfigured } = useAuth();
+  const { signIn, signUp, user, profile, isActive, isConfigured } = useAuth();
 
   // Mode: 'login' | 'register'
   const [authMode, setAuthMode] = useState('login');
@@ -37,8 +37,10 @@ export default function Login() {
   const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
-    if (user) navigate(from, { replace: true });
-  }, [user, navigate, from]);
+    if (user && isActive && profile && ['admin', 'warehouse_keeper'].includes(profile.role)) {
+      navigate(from, { replace: true });
+    }
+  }, [user, isActive, profile, navigate, from]);
 
   const handleChange = (e) => {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
