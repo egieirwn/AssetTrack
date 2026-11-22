@@ -1,6 +1,6 @@
 -- ============================================================
 -- PHASE B MIGRATION: Warehouse Inventory & Borrowing Database Schema
--- Project: SiPenitip — PT Vinix Seven Aurum Warehouse Management System
+-- Project: PT Vinix Seven Aurum Warehouse Management System
 -- Date: 2026-11-13
 --
 -- IMPORTANT SAFETY & PRESERVATION RULES:
