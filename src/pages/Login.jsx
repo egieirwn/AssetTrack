@@ -2,24 +2,37 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Shield, Eye, EyeOff, Lock, Mail, AlertCircle, ArrowRight,
-  Boxes, Sparkles, CheckCircle2, Clock, User, QrCode, Layers
+  Boxes, Sparkles, CheckCircle2, Clock, User, UserPlus, QrCode, Layers
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, user, profile, isActive, isConfigured } = useAuth();
+  const { signIn, signUp, user, profile, isActive, isConfigured } = useAuth();
+
+  // Mode: 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login');
 
   // Login form state
   const [form, setForm] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
+  // Register form state
+  const [regForm, setRegForm] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+  const [showRegPassword, setShowRegPassword] = useState(false);
+
   // Status & feedback
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isPendingNotice, setIsPendingNotice] = useState(false);
+  const [successPending, setSuccessPending] = useState(null);
 
   const from = location.state?.from?.pathname || '/dashboard';
 
@@ -33,6 +46,11 @@ export default function Login() {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     setError('');
     setIsPendingNotice(false);
+  };
+
+  const handleRegChange = (e) => {
+    setRegForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setError('');
   };
 
   // Submit Sign In
@@ -62,6 +80,61 @@ export default function Login() {
       }
     } catch (err) {
       setError('Terjadi kendala saat proses autentikasi. Silakan coba kembali.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Submit Sign Up (Warehouse Keeper registration)
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!regForm.fullName.trim()) {
+      setError('Nama lengkap wajib diisi.');
+      return;
+    }
+    if (!regForm.email.trim()) {
+      setError('Alamat email wajib diisi.');
+      return;
+    }
+    if (!regForm.password) {
+      setError('Kata sandi wajib diisi.');
+      return;
+    }
+    if (regForm.password.length < 6) {
+      setError('Kata sandi minimal 6 karakter.');
+      return;
+    }
+    if (regForm.password !== regForm.confirmPassword) {
+      setError('Konfirmasi kata sandi tidak cocok.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error: regError } = await signUp({
+        email: regForm.email.trim(),
+        password: regForm.password,
+        fullName: regForm.fullName.trim()
+      });
+
+      if (regError) {
+        const msg = regError.message || '';
+        if (msg.includes('already registered') || msg.includes('User already registered') || msg.includes('already in use')) {
+          setError('Alamat email ini sudah terdaftar di sistem. Silakan masuk atau gunakan fitur lupa kata sandi.');
+        } else {
+          setError(msg || 'Gagal melakukan pendaftaran akun petugas.');
+        }
+      } else {
+        setSuccessPending({
+          email: regForm.email.trim(),
+          fullName: regForm.fullName.trim()
+        });
+        setRegForm({ fullName: '', email: '', password: '', confirmPassword: '' });
+      }
+    } catch (err) {
+      setError('Terjadi kendala jaringan saat mendaftarkan akun. Silakan coba lagi.');
     } finally {
       setLoading(false);
     }
@@ -218,7 +291,7 @@ export default function Login() {
         </div>
 
         {/* ============================================================
-            RIGHT PANEL: LOGIN FORM ONLY
+            RIGHT PANEL: AUTHENTICATION FORM
             ============================================================ */}
         <div className="atrium-login-form-panel">
           {/* Brand Logo & Name */}
@@ -242,16 +315,40 @@ export default function Login() {
 
           {/* Greeting Title */}
           <h1 className="atrium-form-greeting-title">
-            Hai, selamat datang kembali
+            {authMode === 'login' ? 'Hai, selamat datang kembali' : 'Daftar Akun Petugas Baru'}
           </h1>
 
-          {/* Subtitle — static, no register toggle */}
-          <div className="atrium-form-switch-subtext">
-            Masukkan kredensial akun Anda untuk mengakses sistem.
-          </div>
+          {/* Subtitle with Switch Link */}
+          {!successPending && (
+            <div className="atrium-form-switch-subtext">
+              {authMode === 'login' ? (
+                <>
+                  Baru di Vinix Warehouse?
+                  <button
+                    type="button"
+                    className="atrium-form-switch-btn"
+                    onClick={() => { setAuthMode('register'); setError(''); setIsPendingNotice(false); }}
+                  >
+                    Daftar Gratis
+                  </button>
+                </>
+              ) : (
+                <>
+                  Sudah memiliki akun?
+                  <button
+                    type="button"
+                    className="atrium-form-switch-btn"
+                    onClick={() => { setAuthMode('login'); setError(''); setIsPendingNotice(false); }}
+                  >
+                    Masuk di Sini
+                  </button>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Demo Mode Notice */}
-          {!isConfigured && (
+          {!isConfigured && !successPending && (
             <div style={{
               backgroundColor: '#EFF6FF',
               border: '1px solid #BFDBFE',
@@ -269,161 +366,356 @@ export default function Login() {
             </div>
           )}
 
-          {/* ============================================================
-              FORM: SIGN IN (MASUK)
-              ============================================================ */}
-          <form onSubmit={handleSubmit}>
-            <div className="atrium-modern-input-wrap">
-              <input
-                id="email"
-                type="email"
-                name="email"
-                className="atrium-modern-input-field"
-                placeholder="Contoh: email@example.com"
-                value={form.email}
-                onChange={handleChange}
-                autoComplete="email"
-                required
-              />
-            </div>
-
-            <div className="atrium-modern-input-wrap">
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  className="atrium-modern-input-field"
-                  style={{ paddingRight: '2.75rem' }}
-                  placeholder="Masukkan kata sandi kamu"
-                  value={form.password}
-                  onChange={handleChange}
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(p => !p)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#94A3B8',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}
-                  aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
+          {/* Screen: Success Pending Approval */}
+          {successPending ? (
+            <div style={{ textAlign: 'center', padding: '0.5rem 0' }}>
               <div style={{
-                backgroundColor: isPendingNotice ? '#FEF3C7' : '#FEE2E2',
-                border: `1px solid ${isPendingNotice ? '#FCD34D' : '#FECACA'}`,
-                borderRadius: '10px',
-                padding: '0.65rem 0.875rem',
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                backgroundColor: '#FEF3C7',
+                color: '#D97706',
                 display: 'flex',
-                alignItems: 'flex-start',
-                gap: '0.5rem',
-                color: isPendingNotice ? '#92400E' : '#991B1B',
-                fontSize: '0.8125rem',
-                marginBottom: '1rem',
-                lineHeight: 1.45
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem auto'
               }}>
-                {isPendingNotice ? (
-                  <Clock size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                ) : (
-                  <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                )}
-                <span>{error}</span>
+                <Clock size={28} />
               </div>
-            )}
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="atrium-modern-submit-btn"
-              disabled={loading}
-            >
-              {loading ? 'Memverifikasi...' : 'Masuk'}
-            </button>
+              <span style={{
+                fontSize: '0.6875rem',
+                fontWeight: 700,
+                backgroundColor: '#FEF3C7',
+                color: '#92400E',
+                padding: '0.2rem 0.6rem',
+                borderRadius: '9999px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em'
+              }}>
+                Menunggu Persetujuan Admin
+              </span>
 
-            {/* Forgot password link below button */}
-            <div style={{ textAlign: 'right', marginTop: '0.625rem' }}>
-              <Link
-                to="/forgot-password"
-                style={{
-                  fontSize: '0.78125rem',
-                  fontWeight: 600,
-                  color: '#2563EB',
-                  textDecoration: 'none'
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0.75rem 0 0.5rem 0', color: '#0F172A' }}>
+                Pendaftaran Berhasil
+              </h3>
+
+              <p style={{ fontSize: '0.8125rem', color: '#64748B', lineHeight: 1.6, margin: '0 0 1.25rem 0' }}>
+                Akun Penjaga Gudang untuk <strong>{successPending.email}</strong> telah terdaftar di sistem.
+                Sesuai kebijakan keamanan PT Vinix Seven Aurum, akun baru berstatus nonaktif hingga diverifikasi dan diaktifkan oleh Administrator.
+              </p>
+
+              <div style={{
+                backgroundColor: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                borderRadius: '10px',
+                padding: '0.75rem 1rem',
+                fontSize: '0.75rem',
+                color: '#475569',
+                textAlign: 'left',
+                marginBottom: '1.5rem',
+                lineHeight: 1.5
+              }}>
+                <strong>Konfirmasi Email Dinonaktifkan:</strong> Anda tidak perlu menunggu email konfirmasi. Akses sistem gudang akan terbuka segera setelah Administrator menyetujui akun Anda.
+              </div>
+
+              <button
+                type="button"
+                className="atrium-modern-submit-btn"
+                onClick={() => {
+                  setSuccessPending(null);
+                  setAuthMode('login');
                 }}
               >
-                Lupa kata sandi?
-              </Link>
+                Kembali ke Halaman Masuk
+              </button>
             </div>
-
-            {/* Enterprise Role Access Badges */}
-            <div style={{ margin: '1.25rem 0 0.875rem 0' }}>
-              <div style={{ fontSize: '0.75rem', color: '#94A3B8', textAlign: 'center', marginBottom: '0.625rem' }}>
-                Atau masuk menggunakan portal resmi
+          ) : authMode === 'login' ? (
+            /* ============================================================
+               FORM: SIGN IN (MASUK)
+               ============================================================ */
+            <form onSubmit={handleSubmit}>
+              <div className="atrium-modern-input-wrap">
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  className="atrium-modern-input-field"
+                  placeholder="Contoh: email@example.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  autoComplete="email"
+                  required
+                />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
-                <div className="atrium-access-badge-card" title="Hak Akses Administrator Sistem">
-                  <Shield size={14} color="#2563EB" />
-                  <span>Admin</span>
-                </div>
-                <div className="atrium-access-badge-card" title="Hak Akses Penjaga Gudang">
-                  <Boxes size={14} color="#059669" />
-                  <span>Gudang</span>
-                </div>
-                <div className="atrium-access-badge-card" title="Keamanan Enkripsi Data SSL/TLS">
-                  <Lock size={14} color="#475569" />
-                  <span>Tersertifikasi</span>
+
+              <div className="atrium-modern-input-wrap">
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    className="atrium-modern-input-field"
+                    style={{ paddingRight: '2.75rem' }}
+                    placeholder="Masukkan kata sandi kamu"
+                    value={form.password}
+                    onChange={handleChange}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(p => !p)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#94A3B8',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
-            </div>
 
-            {/* Remember Me Checkbox */}
-            <label style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              fontSize: '0.8125rem',
-              color: '#475569',
-              cursor: 'pointer',
-              margin: '0.875rem 0 1.25rem 0',
-              userSelect: 'none'
-            }}>
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={e => setRememberMe(e.target.checked)}
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  accentColor: '#2563EB',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              />
-              <span>Ingat perangkat ini</span>
-            </label>
+              {error && (
+                <div style={{
+                  backgroundColor: isPendingNotice ? '#FEF3C7' : '#FEE2E2',
+                  border: `1px solid ${isPendingNotice ? '#FCD34D' : '#FECACA'}`,
+                  borderRadius: '10px',
+                  padding: '0.65rem 0.875rem',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.5rem',
+                  color: isPendingNotice ? '#92400E' : '#991B1B',
+                  fontSize: '0.8125rem',
+                  marginBottom: '1rem',
+                  lineHeight: 1.45
+                }}>
+                  {isPendingNotice ? (
+                    <Clock size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                  ) : (
+                    <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                  )}
+                  <span>{error}</span>
+                </div>
+              )}
 
-            {/* Terms and Privacy Policy Footer */}
-            <div style={{ fontSize: '0.71875rem', color: '#94A3B8', textAlign: 'center', lineHeight: 1.5 }}>
-              Dengan melanjutkan, kamu menerima{' '}
-              <span style={{ color: '#2563EB', fontWeight: 600 }}>Syarat Penggunaan</span> dan{' '}
-              <span style={{ color: '#2563EB', fontWeight: 600 }}>Kebijakan Privasi</span> PT Vinix Seven Aurum.
-            </div>
-          </form>
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="atrium-modern-submit-btn"
+                disabled={loading}
+              >
+                {loading ? 'Memverifikasi...' : 'Masuk'}
+              </button>
+
+              {/* Forgot password link below button (matching reference) */}
+              <div style={{ textAlign: 'right', marginTop: '0.625rem' }}>
+                <Link
+                  to="/forgot-password"
+                  style={{
+                    fontSize: '0.78125rem',
+                    fontWeight: 600,
+                    color: '#2563EB',
+                    textDecoration: 'none'
+                  }}
+                >
+                  Lupa kata sandi?
+                </Link>
+              </div>
+
+              {/* Enterprise Role Access Badges (counterpart of social login buttons in reference) */}
+              <div style={{ margin: '1.25rem 0 0.875rem 0' }}>
+                <div style={{ fontSize: '0.75rem', color: '#94A3B8', textAlign: 'center', marginBottom: '0.625rem' }}>
+                  Atau masuk menggunakan portal resmi
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.625rem' }}>
+                  <div className="atrium-access-badge-card" title="Hak Akses Administrator Sistem">
+                    <Shield size={14} color="#2563EB" />
+                    <span>Admin</span>
+                  </div>
+                  <div className="atrium-access-badge-card" title="Hak Akses Penjaga Gudang">
+                    <Boxes size={14} color="#059669" />
+                    <span>Gudang</span>
+                  </div>
+                  <div className="atrium-access-badge-card" title="Keamanan Enkripsi Data SSL/TLS">
+                    <Lock size={14} color="#475569" />
+                    <span>Tersertifikasi</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Remember Me Checkbox */}
+              <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.8125rem',
+                color: '#475569',
+                cursor: 'pointer',
+                margin: '0.875rem 0 1.25rem 0',
+                userSelect: 'none'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    accentColor: '#2563EB',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <span>Ingat perangkat ini</span>
+              </label>
+
+              {/* Terms and Privacy Policy Footer */}
+              <div style={{ fontSize: '0.71875rem', color: '#94A3B8', textAlign: 'center', lineHeight: 1.5 }}>
+                Dengan melanjutkan, kamu menerima{' '}
+                <span style={{ color: '#2563EB', fontWeight: 600 }}>Syarat Penggunaan</span> dan{' '}
+                <span style={{ color: '#2563EB', fontWeight: 600 }}>Kebijakan Privasi</span> PT Vinix Seven Aurum.
+              </div>
+            </form>
+          ) : (
+            /* ============================================================
+               FORM: SIGN UP (DAFTAR PETUGAS GUDANG)
+               ============================================================ */
+            <form onSubmit={handleRegisterSubmit}>
+              <div className="atrium-modern-input-wrap">
+                <input
+                  id="reg-fullName"
+                  type="text"
+                  name="fullName"
+                  className="atrium-modern-input-field"
+                  placeholder="Nama Lengkap (cth. Budi Santoso)"
+                  value={regForm.fullName}
+                  onChange={handleRegChange}
+                  required
+                />
+              </div>
+
+              <div className="atrium-modern-input-wrap">
+                <input
+                  id="reg-email"
+                  type="email"
+                  name="email"
+                  className="atrium-modern-input-field"
+                  placeholder="Alamat Email Perusahaan (nama@vinix7aurum.com)"
+                  value={regForm.email}
+                  onChange={handleRegChange}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+
+              <div className="atrium-modern-input-wrap">
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="reg-password"
+                    type={showRegPassword ? 'text' : 'password'}
+                    name="password"
+                    className="atrium-modern-input-field"
+                    style={{ paddingRight: '2.75rem' }}
+                    placeholder="Kata Sandi (Min. 6 Karakter)"
+                    value={regForm.password}
+                    onChange={handleRegChange}
+                    autoComplete="new-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRegPassword(p => !p)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: '#94A3B8',
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    aria-label={showRegPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'}
+                  >
+                    {showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="atrium-modern-input-wrap">
+                <input
+                  id="reg-confirmPassword"
+                  type="password"
+                  name="confirmPassword"
+                  className="atrium-modern-input-field"
+                  placeholder="Konfirmasi Kata Sandi"
+                  value={regForm.confirmPassword}
+                  onChange={handleRegChange}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
+
+              {error && (
+                <div style={{
+                  backgroundColor: '#FEE2E2',
+                  border: '1px solid #FECACA',
+                  borderRadius: '10px',
+                  padding: '0.65rem 0.875rem',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: '0.5rem',
+                  color: '#991B1B',
+                  fontSize: '0.8125rem',
+                  marginBottom: '1rem',
+                  lineHeight: 1.45
+                }}>
+                  <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="atrium-modern-submit-btn"
+                disabled={loading}
+              >
+                {loading ? 'Mendaftarkan Akun...' : 'Daftarkan Akun Petugas'}
+              </button>
+
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.75rem',
+                backgroundColor: '#F8FAFC',
+                borderRadius: '10px',
+                border: '1px solid #E2E8F0',
+                fontSize: '0.71875rem',
+                color: '#64748B',
+                lineHeight: 1.5,
+                textAlign: 'left'
+              }}>
+                <Shield size={12} color="#2563EB" style={{ display: 'inline', marginRight: '4px' }} />
+                Akun mandiri otomatis diberi role <strong>Penjaga Gudang</strong> dan memerlukan aktivasi oleh Administrator sebelum dapat digunakan.
+              </div>
+
+              <div style={{ fontSize: '0.71875rem', color: '#94A3B8', textAlign: 'center', lineHeight: 1.5, marginTop: '1rem' }}>
+                Dengan mendaftar, kamu menerima{' '}
+                <span style={{ color: '#2563EB', fontWeight: 600 }}>Kebijakan Operasional Gudang</span> PT Vinix Seven Aurum.
+              </div>
+            </form>
+          )}
         </div>
       </div>
     </div>
