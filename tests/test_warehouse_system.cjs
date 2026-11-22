@@ -172,7 +172,7 @@ function runWarehouseSystemTests() {
   });
 
   // 9. Pembersihan Rute & Komponen Legasi Pengunjung
-  test('9. Pembersihan Rute Aktif: Tidak ada rute pengunjung usang yang aktif di App.jsx', () => {
+  test('9. Pembersihan Rute Aktif: Tidak ada rute penitipan pengunjung aktif di App.jsx', () => {
     const appFile = fs.readFileSync(path.join(__dirname, '../src/App.jsx'), 'utf8');
     const legacyRoutes = ['/penitipan-baru', '/kartu-penitipan', '/barang-dititipkan', '/pengambilan', '/pengunjung'];
 

@@ -1,6 +1,6 @@
 -- ============================================================
 -- PHASE B.1 MIGRATION: Database Security, Stock Integrity & Transaction Safety Review
--- Project: PT Vinix Seven Aurum Warehouse Management System
+-- Project: SiPenitip — PT Vinix Seven Aurum Warehouse Management System
 -- Date: 2026-11-13
 --
 -- PURPOSE & REVIEW FINDINGS ADDRESSED:

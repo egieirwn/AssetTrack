@@ -1,6 +1,6 @@
 /**
  * Test Suite: Phase F — Borrowing & Return Management
- * PT Vinix Seven Aurum Warehouse Management System
+ * SiPenitip — PT Vinix Seven Aurum
  *
  * Memvalidasi:
  * 1. Validasi field wajib direktori peminjam (full_name, department).
@@ -339,7 +339,7 @@ function runPhaseFTests() {
   test('17. Payload QR Code receipt tidak mengekspos data kredensial/rahasia peminjam', () => {
     function generateQrPayload(txCode, txId) {
       return JSON.stringify({
-        system: 'Vinix-WMS',
+        system: 'SiPenitip-Vinix',
         type: 'BORROWING_RECEIPT',
         code: txCode,
         id: txId

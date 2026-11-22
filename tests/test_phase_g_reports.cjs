@@ -1,6 +1,6 @@
 /**
  * Test Suite: Phase G — Reports & Final Verification
- * PT Vinix Seven Aurum Warehouse Management System
+ * SiPenitip — PT Vinix Seven Aurum
  *
  * Memvalidasi:
  * 1. Perhitungan metrik Dashboard: pemisahan jumlah SKU vs total unit fisik.

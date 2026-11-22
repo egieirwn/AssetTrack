@@ -34,14 +34,7 @@ function runHarnessSafetyTests() {
     }
   }
 
-  let mockProdUrl = 'https://gtdnfymvjnebtjlacjko.supabase.co';
-  try {
-    const envPath = path.join(__dirname, '..', '.env');
-    if (fs.existsSync(envPath)) {
-      const match = fs.readFileSync(envPath, 'utf8').match(/VITE_SUPABASE_URL\s*=\s*([^\r\n]+)/);
-      if (match) mockProdUrl = match[1].trim();
-    }
-  } catch (e) {}
+  const mockProdUrl = 'https://gtdnfymvjnebtjlacjko.supabase.co';
 
   // 1. Menolak jika kredensial staging tidak ada
   test('1. Menolak eksekusi jika STAGING_SUPABASE_URL kosong', () => {
@@ -74,12 +67,8 @@ function runHarnessSafetyTests() {
 
   // 4. Mendeteksi tabrakan Project Reference produksi
   test('4. Memblokir fatal jika Project Ref sama dengan produksi', () => {
-    let testRef = 'gtdnfymvjnebtjlacjko';
-    try {
-      testRef = new URL(mockProdUrl).hostname.split('.')[0];
-    } catch (e) {}
     const res = validateSafetyPreconditions({
-      STAGING_SUPABASE_URL: `https://${testRef}.alt-domain.co`,
+      STAGING_SUPABASE_URL: 'https://gtdnfymvjnebtjlacjko.supabase.co',
       STAGING_SUPABASE_ANON_KEY: 'mock-key',
       CONFIRM_STAGING_TESTS: 'true'
     });

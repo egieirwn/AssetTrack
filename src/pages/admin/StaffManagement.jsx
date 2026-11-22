@@ -2,13 +2,11 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   UserCog, UserPlus, Edit2, RefreshCw, Shield, AlertCircle,
   Mail, Phone, Clock, Search, Filter, CheckCircle2,
-  AlertTriangle, X, Check, ArrowRight, UserCheck, UserX,
-  ShieldCheck, Users
+  AlertTriangle, X, Check, ArrowRight
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/common/Toast';
-import CustomSelect from '../../components/common/CustomSelect';
 
 const MOCK_WAREHOUSE_KEEPERS = [
   {
@@ -57,7 +55,6 @@ export default function StaffManagement() {
   const [errorMessage, setErrorMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [shiftFilter, setShiftFilter] = useState('all');
 
   // Modal State: Invite / Tambah
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -133,24 +130,12 @@ export default function StaffManagement() {
       if (statusFilter === 'active') matchesStatus = member.is_active === true;
       if (statusFilter === 'inactive') matchesStatus = member.is_active === false;
 
-      let matchesShift = true;
-      if (shiftFilter !== 'all') matchesShift = member.shift === shiftFilter;
-
-      return matchesSearch && matchesStatus && matchesShift;
+      return matchesSearch && matchesStatus;
     });
-  }, [staff, searchQuery, statusFilter, shiftFilter]);
+  }, [staff, searchQuery, statusFilter]);
 
   const activeCount = useMemo(() => staff.filter(s => s.is_active).length, [staff]);
   const inactiveCount = useMemo(() => staff.filter(s => !s.is_active).length, [staff]);
-
-  const shiftCounts = useMemo(() => {
-    return {
-      pagi: staff.filter(s => s.shift === 'Pagi').length,
-      siang: staff.filter(s => s.shift === 'Siang').length,
-      malam: staff.filter(s => s.shift === 'Malam').length,
-      fleksibel: staff.filter(s => !s.shift || s.shift === 'Fleksibel').length
-    };
-  }, [staff]);
 
   // ============================================================
   // HANDLERS: INVITE / CREATE WAREHOUSE KEEPER
@@ -420,95 +405,52 @@ export default function StaffManagement() {
   };
 
   return (
-    <div className="atrium-content-container">
-      {/* Top Banner (Atrium Header Card) */}
-      <div className="atrium-glass-card atrium-banner-card no-print" style={{ marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.375rem' }}>
-              <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.08)', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <UserCog size={20} />
-              </div>
-              <h1 className="atrium-page-title" style={{ margin: 0, fontSize: '1.5rem' }}>Manajemen Petugas Gudang</h1>
+    <div className="page">
+      {/* Page Header */}
+      <div className="page-header" style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem' }}>
+            <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: 'var(--color-primary-light, #DBEAFE)', color: 'var(--color-primary, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <UserCog size={20} />
             </div>
-            <p className="atrium-card-subtitle" style={{ margin: 0 }}>
-              Pusat kendali akun operasional, penugasan shift kerja, dan pemantauan hak akses Penjaga Gudang PT Vinix Seven Aurum.
-            </p>
+            <h1 className="page-title" style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>Manajemen Penjaga Gudang</h1>
           </div>
-
-          <div style={{ display: 'flex', gap: '0.625rem', alignItems: 'center' }}>
-            <button
-              type="button"
-              className="btn-atrium-outline"
-              onClick={fetchData}
-              disabled={loading}
-              title="Segarkan data petugas"
-            >
-              <RefreshCw size={15} className={loading ? 'spin' : ''} />
-              Segarkan
-            </button>
-            <button
-              type="button"
-              className="btn-atrium-primary"
-              onClick={openInviteModal}
-            >
-              <UserPlus size={16} />
-              Undang Petugas Gudang
-            </button>
-          </div>
+          <p className="page-subtitle" style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+            Kelola akun, penugasan shift, dan hak akses operasional Penjaga Gudang PT Vinix Seven Aurum.
+          </p>
         </div>
 
-        {/* Mini KPI Chips Row */}
-        <div style={{ display: 'flex', gap: '1.75rem', marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid rgba(148, 163, 184, 0.2)', flexWrap: 'wrap', alignItems: 'center' }}>
-          <div>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Total Petugas</span>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>{staff.length} orang</div>
-          </div>
-          <div>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Akun Aktif Operasional</span>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#059669' }}>{activeCount} aktif</div>
-          </div>
-          <div>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Akun Ditangguhkan</span>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: inactiveCount > 0 ? '#dc2626' : '#64748b' }}>
-              {inactiveCount} nonaktif
-            </div>
-          </div>
-          <div>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Sebaran Shift</span>
-            <div style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#2563eb', marginTop: '0.2rem' }}>
-              Pagi ({shiftCounts.pagi}) • Siang ({shiftCounts.siang}) • Malam ({shiftCounts.malam})
-            </div>
-          </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center' }}>
-            <span style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              padding: '0.35rem 0.85rem',
-              borderRadius: '9999px',
-              backgroundColor: '#EFF6FF',
-              color: '#1D4ED8',
-              fontSize: '0.75rem',
-              fontWeight: 700,
-              border: '1px solid #BFDBFE'
-            }}>
-              <ShieldCheck size={14} />
-              Otoritas Level Administrator
-            </span>
-          </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={fetchData}
+            disabled={loading}
+            title="Muat ulang data"
+          >
+            <RefreshCw size={15} className={loading ? 'spin' : ''} />
+            <span>Perbarui</span>
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={openInviteModal}
+          >
+            <UserPlus size={16} />
+            <span>Undang Penjaga Gudang</span>
+          </button>
         </div>
       </div>
 
       {/* Error Alert Banner */}
       {errorMessage && (
-        <div className="atrium-error-card no-print" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <AlertCircle size={18} color="#e11d48" style={{ flexShrink: 0 }} />
+        <div className="alert alert-danger" style={{ marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
           <div style={{ flex: 1, fontSize: '0.875rem' }}>{errorMessage}</div>
           <button
             type="button"
             onClick={() => setErrorMessage('')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '0.25rem' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '0.25rem' }}
             aria-label="Tutup pesan error"
           >
             <X size={16} />
@@ -516,129 +458,129 @@ export default function StaffManagement() {
         </div>
       )}
 
-      {/* Filter and Search Bar Card */}
-      <div className="atrium-glass-card no-print" style={{ padding: '0.875rem 1.25rem', marginBottom: '1.25rem' }}>
-        <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          {/* Search Box */}
-          <div style={{ flex: '1 1 260px', position: 'relative' }}>
-            <Search size={16} color="#94a3b8" style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)' }} />
-            <input
-              type="text"
-              className="atrium-input"
-              placeholder="Cari berdasarkan nama, email, atau ID karyawan..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{ width: '100%', paddingLeft: '2.35rem' }}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}
-                aria-label="Hapus kata kunci pencarian"
-              >
-                <X size={15} />
-              </button>
-            )}
+      {/* Status Counters & Filters */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.25rem' }}>
+        <div className="card" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#EFF6FF', color: '#1D4ED8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <UserCog size={22} />
           </div>
-
-          {/* Shift Filter Dropdown */}
-          <div style={{ flex: '0 0 180px' }}>
-            <CustomSelect
-              className="atrium-input"
-              value={shiftFilter}
-              onChange={(e) => setShiftFilter(e.target.value)}
-              ariaLabel="Filter Shift Kerja"
-            >
-              <option value="all">Semua Shift</option>
-              <option value="Pagi">Shift Pagi</option>
-              <option value="Siang">Shift Siang</option>
-              <option value="Malam">Shift Malam</option>
-              <option value="Fleksibel">Shift Fleksibel</option>
-            </CustomSelect>
+          <div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Total Penjaga Gudang</span>
+            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{staff.length}</p>
           </div>
+        </div>
 
-          {/* Status Filter Dropdown */}
-          <div style={{ flex: '0 0 180px' }}>
-            <CustomSelect
-              className="atrium-input"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              ariaLabel="Filter Status Akun"
-            >
-              <option value="all">Semua Status ({staff.length})</option>
-              <option value="active">Hanya Aktif ({activeCount})</option>
-              <option value="inactive">Hanya Nonaktif ({inactiveCount})</option>
-            </CustomSelect>
+        <div className="card" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#DCFCE7', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <CheckCircle2 size={22} />
           </div>
+          <div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Akun Aktif</span>
+            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{activeCount}</p>
+          </div>
+        </div>
 
-          {/* Reset Button */}
-          {(searchQuery || shiftFilter !== 'all' || statusFilter !== 'all') && (
+        <div className="card" style={{ padding: '1rem', display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', backgroundColor: '#FEE2E2', color: '#B91C1C', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <AlertTriangle size={22} />
+          </div>
+          <div>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Akun Nonaktif</span>
+            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{inactiveCount}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="card" style={{ padding: '0.875rem 1rem', marginBottom: '1.25rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: '1 1 280px', position: 'relative' }}>
+          <Search size={16} style={{ position: 'absolute', left: '0.75rem', color: 'var(--color-text-muted)' }} />
+          <input
+            type="text"
+            className="form-input"
+            placeholder="Cari berdasarkan nama, email, atau ID karyawan..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ paddingLeft: '2.25rem', width: '100%' }}
+          />
+          {searchQuery && (
             <button
               type="button"
-              className="btn-atrium-ghost btn-atrium-sm"
-              onClick={() => { setSearchQuery(''); setShiftFilter('all'); setStatusFilter('all'); }}
-              title="Reset semua filter pencarian"
+              onClick={() => setSearchQuery('')}
+              style={{ position: 'absolute', right: '0.75rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)' }}
             >
               <X size={14} />
-              <span>Reset</span>
             </button>
           )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Filter size={15} color="var(--color-text-muted)" />
+          <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>Status:</span>
+          <select
+            className="form-input"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ padding: '0.4rem 0.75rem', fontSize: '0.8125rem', width: 'auto' }}
+          >
+            <option value="all">Semua Status ({staff.length})</option>
+            <option value="active">Hanya Aktif ({activeCount})</option>
+            <option value="inactive">Hanya Nonaktif ({inactiveCount})</option>
+          </select>
         </div>
       </div>
 
       {/* Main Table Card */}
-      <div className="atrium-glass-card" style={{ padding: 0, overflow: 'hidden' }}>
-        <div className="table-wrapper" style={{ margin: 0 }}>
-          <table className="atrium-inventory-table">
+      <div className="card">
+        <div className="table-wrapper">
+          <table className="data-table">
             <thead>
               <tr>
-                <th style={{ width: '40px', textAlign: 'center' }}>#</th>
-                <th>Petugas Gudang</th>
-                <th>Peran & Otoritas</th>
+                <th>Penjaga Gudang</th>
+                <th>Role</th>
                 <th>ID Karyawan</th>
                 <th>Shift Kerja</th>
-                <th>No. Telepon / WhatsApp</th>
-                <th style={{ textAlign: 'center' }}>Status Akun</th>
+                <th>No. Telepon</th>
+                <th>Status Akun</th>
                 <th>Terdaftar</th>
-                <th style={{ textAlign: 'right', paddingRight: '1.25rem' }}>Aksi Administrator</th>
+                <th style={{ textAlign: 'right' }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '3.5rem 1rem' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem' }}>
                     <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
                       <span className="spinner spinner-primary" style={{ width: '2rem', height: '2rem' }} />
-                      <p style={{ color: '#64748b', fontSize: '0.875rem', margin: 0 }}>Menyiapkan direktori petugas gudang...</p>
+                      <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', margin: 0 }}>Memuat daftar penjaga gudang...</p>
                     </div>
                   </td>
                 </tr>
               ) : filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={9} style={{ textAlign: 'center', padding: '3.5rem 1rem' }}>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '3rem 1rem' }}>
                     <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{ width: '52px', height: '52px', borderRadius: '50%', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                        <UserCog size={26} />
+                      <div style={{ width: '48px', height: '48px', borderRadius: '50%', backgroundColor: 'var(--color-bg-subtle, #F3F4F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                        <UserCog size={24} />
                       </div>
-                      <h4 style={{ margin: 0, fontWeight: 700, color: '#0F172A' }}>
-                        {staff.length === 0 ? 'Belum Ada Penjaga Gudang Terdaftar' : 'Tidak Ditemukan Hasil'}
+                      <h4 style={{ margin: 0, fontWeight: 700 }}>
+                        {staff.length === 0 ? 'Belum Ada Penjaga Gudang' : 'Tidak Ditemukan Hasil'}
                       </h4>
-                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.875rem', maxWidth: '420px', lineHeight: 1.5 }}>
+                      <p style={{ margin: 0, color: 'var(--color-text-muted)', fontSize: '0.875rem', maxWidth: '380px' }}>
                         {staff.length === 0
-                          ? 'Belum ada akun Penjaga Gudang yang terdaftar. Klik tombol di bawah untuk mengundang petugas pertama ke sistem gudang.'
-                          : 'Tidak ada data Penjaga Gudang yang cocok dengan kriteria kata kunci pencarian, filter shift, atau status yang dipilih.'}
+                          ? 'Belum ada akun Penjaga Gudang yang terdaftar. Klik tombol di bawah untuk mengundang petugas pertama.'
+                          : 'Tidak ada Penjaga Gudang yang sesuai dengan kriteria pencarian atau filter status yang dipilih.'}
                       </p>
                       {staff.length === 0 ? (
-                        <button type="button" className="btn-atrium-primary btn-atrium-sm" onClick={openInviteModal} style={{ marginTop: '0.5rem' }}>
+                        <button type="button" className="btn btn-primary btn-sm" onClick={openInviteModal} style={{ marginTop: '0.5rem' }}>
                           <UserPlus size={15} />
-                          <span>Undang Petugas Pertama</span>
+                          <span>Undang Penjaga Gudang</span>
                         </button>
                       ) : (
                         <button
                           type="button"
-                          className="btn-atrium-outline btn-atrium-sm"
-                          onClick={() => { setSearchQuery(''); setShiftFilter('all'); setStatusFilter('all'); }}
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
                           style={{ marginTop: '0.5rem' }}
                         >
                           Reset Pencarian
@@ -648,20 +590,17 @@ export default function StaffManagement() {
                   </td>
                 </tr>
               ) : (
-                filteredStaff.map((member, idx) => (
+                filteredStaff.map((member) => (
                   <tr key={member.id}>
-                    <td style={{ textAlign: 'center', color: '#94a3b8', fontSize: '0.8125rem' }}>
-                      {idx + 1}
-                    </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                         <div
                           style={{
-                            width: '38px',
-                            height: '38px',
+                            width: '36px',
+                            height: '36px',
                             borderRadius: '50%',
-                            backgroundColor: member.is_active ? 'var(--color-primary-light, #DBEAFE)' : '#F1F5F9',
-                            color: member.is_active ? 'var(--color-primary, #2563EB)' : '#94A3B8',
+                            backgroundColor: member.is_active ? 'var(--color-primary-light, #DBEAFE)' : '#F3F4F6',
+                            color: member.is_active ? 'var(--color-primary, #2563EB)' : '#9CA3AF',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -673,11 +612,11 @@ export default function StaffManagement() {
                           {member.full_name?.charAt(0)?.toUpperCase() || 'P'}
                         </div>
                         <div>
-                          <p style={{ fontWeight: 700, margin: 0, fontSize: '0.875rem', color: member.is_active ? '#0F172A' : '#64748B' }}>
+                          <p style={{ fontWeight: 600, margin: 0, fontSize: '0.875rem', color: member.is_active ? 'var(--color-text-main)' : 'var(--color-text-muted)' }}>
                             {member.full_name}
                           </p>
-                          <span style={{ color: '#64748b', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
-                            <Mail size={12} />
+                          <span style={{ color: 'var(--color-text-muted)', fontSize: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <Mail size={11} />
                             {member.email || '—'}
                           </span>
                         </div>
@@ -690,84 +629,87 @@ export default function StaffManagement() {
                           fontWeight: 700,
                           padding: '0.25rem 0.625rem',
                           borderRadius: '999px',
-                          backgroundColor: '#EFF6FF',
-                          color: '#1D4ED8',
+                          backgroundColor: 'var(--color-primary-light, #DBEAFE)',
+                          color: 'var(--color-primary, #2563EB)',
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '0.35rem'
+                          gap: '0.25rem'
                         }}
                       >
-                        <Shield size={12} />
+                        <Shield size={11} />
                         Penjaga Gudang
                       </span>
                     </td>
-                    <td>
+                    <td style={{ fontFamily: 'monospace', fontSize: '0.8125rem' }}>
                       {member.employee_id ? (
-                        <span className="atrium-tag-mono" style={{ fontSize: '0.75rem' }}>
+                        <span style={{ padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: 'var(--color-bg-subtle, #F3F4F6)', border: '1px solid var(--color-border)' }}>
                           {member.employee_id}
                         </span>
                       ) : (
-                        <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>—</span>
+                        <span style={{ color: 'var(--color-text-muted)' }}>—</span>
                       )}
                     </td>
-                    <td>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', color: '#334155', fontWeight: 500 }}>
-                        <Clock size={13} color="#64748b" />
-                        {member.shift || 'Fleksibel'}
-                      </span>
-                    </td>
-                    <td>
-                      {member.phone ? (
-                        <a
-                          href={`tel:${member.phone}`}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.8125rem', color: '#2563eb', textDecoration: 'none' }}
-                          title="Hubungi Petugas"
-                        >
-                          <Phone size={13} />
-                          {member.phone}
-                        </a>
+                    <td style={{ fontSize: '0.8125rem' }}>
+                      {member.shift ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Clock size={12} color="var(--color-text-muted)" />
+                          {member.shift}
+                        </span>
                       ) : (
-                        <span style={{ color: '#94a3b8', fontSize: '0.8125rem' }}>—</span>
+                        <span style={{ color: 'var(--color-text-muted)' }}>—</span>
                       )}
                     </td>
-                    <td style={{ textAlign: 'center' }}>
-                      <span className={`atrium-pill ${member.is_active ? 'atrium-pill-available' : 'atrium-pill-inactive'}`}>
+                    <td style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                      {member.phone ? (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          <Phone size={12} />
+                          {member.phone}
+                        </span>
+                      ) : (
+                        '—'
+                      )}
+                    </td>
+                    <td>
+                      <span
+                        style={{
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          padding: '0.25rem 0.625rem',
+                          borderRadius: '999px',
+                          backgroundColor: member.is_active ? '#DCFCE7' : '#FEE2E2',
+                          color: member.is_active ? '#15803D' : '#B91C1C',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem'
+                        }}
+                      >
                         <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: member.is_active ? '#16A34A' : '#DC2626' }} />
                         {member.is_active ? 'Aktif' : 'Nonaktif'}
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                    <td style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
                       {formatDate(member.created_at)}
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '1.25rem' }}>
-                      <div style={{ display: 'inline-flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <td style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'inline-flex', gap: '0.375rem', alignItems: 'center' }}>
                         <button
                           type="button"
-                          className="btn-atrium-outline btn-atrium-sm"
+                          className="btn btn-secondary btn-sm"
                           onClick={() => openEditModal(member)}
-                          title="Edit Data & Shift Petugas"
+                          title="Edit Data Penjaga Gudang"
+                          style={{ padding: '0.3rem 0.5rem' }}
                         >
                           <Edit2 size={13} />
                           <span>Edit</span>
                         </button>
                         <button
                           type="button"
-                          className={member.is_active ? 'btn-atrium-danger btn-atrium-sm' : 'btn-atrium-outline btn-atrium-sm'}
-                          style={!member.is_active ? { color: '#15803D', borderColor: '#BBF7D0', backgroundColor: '#F0FDF4' } : {}}
+                          className={member.is_active ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm'}
                           onClick={() => openToggleConfirmModal(member)}
-                          title={member.is_active ? 'Nonaktifkan Akses Petugas' : 'Pulihkan Akses Petugas'}
+                          title={member.is_active ? 'Nonaktifkan Akun' : 'Aktifkan Kembali Akun'}
+                          style={{ padding: '0.3rem 0.5rem' }}
                         >
-                          {member.is_active ? (
-                            <>
-                              <UserX size={13} />
-                              <span>Nonaktifkan</span>
-                            </>
-                          ) : (
-                            <>
-                              <UserCheck size={13} />
-                              <span>Aktifkan</span>
-                            </>
-                          )}
+                          {member.is_active ? 'Nonaktifkan' : 'Aktifkan'}
                         </button>
                       </div>
                     </td>
@@ -779,14 +721,11 @@ export default function StaffManagement() {
         </div>
       </div>
 
-      {/* Security Authority Context Alert */}
-      <div className="atrium-glass-card" style={{ marginTop: '1.25rem', padding: '1rem 1.25rem', borderLeft: '4px solid #2563EB', display: 'flex', alignItems: 'flex-start', gap: '0.875rem' }}>
-        <ShieldCheck size={20} color="#2563EB" style={{ flexShrink: 0, marginTop: '2px' }} />
-        <div style={{ fontSize: '0.8125rem', color: '#334155', lineHeight: 1.5 }}>
-          <strong style={{ color: '#0F172A', display: 'block', marginBottom: '0.25rem' }}>
-            Protokol Otoritas Administrator & Keamanan Akun (PT Vinix Seven Aurum)
-          </strong>
-          Modul ini khusus memfasilitasi administrasi akun Penjaga Gudang (<code>warehouse_keeper</code>). Akun dengan peran Administrator memiliki kontrol penuh untuk mengundang, memperbarui data tugas/shift, serta membekukan status aktif akun sewaktu-waktu. Penonaktifan akun akan seketika mencabut hak akses login petugas ke sistem gudang.
+      {/* Security Note Footer */}
+      <div className="alert alert-info" style={{ marginTop: '1.25rem', fontSize: '0.8125rem', display: 'flex', alignItems: 'flex-start', gap: '0.625rem' }}>
+        <Shield size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+        <div>
+          <strong>Aturan Keamanan Akun PT Vinix Seven Aurum:</strong> Modul ini secara khusus mengelola akun Penjaga Gudang (<code>warehouse_keeper</code>). Akun Administrator tidak dapat dimanipulasi dari antarmuka ini. Pengundangan dan perubahan status aktif diverifikasi melalui Edge Function terpercaya (<code>admin-manage-staff</code>).
         </div>
       </div>
 
@@ -795,11 +734,11 @@ export default function StaffManagement() {
       {/* ============================================================ */}
       {isInviteModalOpen && (
         <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
-          <div className="modal-content" style={{ maxWidth: '520px', borderRadius: '20px' }}>
+          <div className="modal-content" style={{ maxWidth: '520px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <UserPlus size={18} color="#2563EB" />
-                <h3 id="invite-modal-title" style={{ margin: 0, fontWeight: 700 }}>Undang Petugas Gudang Baru</h3>
+                <UserPlus size={18} color="var(--color-primary)" />
+                <h3 id="invite-modal-title">Undang Penjaga Gudang Baru</h3>
               </div>
               <button
                 type="button"
@@ -814,9 +753,8 @@ export default function StaffManagement() {
 
             <form onSubmit={handleInviteSubmit}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', borderRadius: '12px', padding: '0.75rem 1rem', fontSize: '0.8125rem', color: '#1E40AF', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <ShieldCheck size={16} style={{ flexShrink: 0 }} />
-                  <span>Undangan aktivasi akan dikirimkan ke email petugas. Peran akun otomatis ditetapkan sebagai <strong>Penjaga Gudang</strong>.</span>
+                <div className="alert alert-info" style={{ fontSize: '0.8125rem' }}>
+                  Undangan aktivasi akan dikirimkan ke email petugas. Peran akun secara otomatis ditetapkan sebagai <strong>Penjaga Gudang</strong>.
                 </div>
 
                 <div className="form-group">
@@ -826,7 +764,7 @@ export default function StaffManagement() {
                   <input
                     id="invite-fullname"
                     type="text"
-                    className="atrium-input"
+                    className="form-input"
                     placeholder="cth: Budi Santoso"
                     value={inviteForm.fullName}
                     onChange={(e) => setInviteForm(p => ({ ...p, fullName: e.target.value }))}
@@ -842,7 +780,7 @@ export default function StaffManagement() {
                   <input
                     id="invite-email"
                     type="email"
-                    className="atrium-input"
+                    className="form-input"
                     placeholder="cth: budi@vinix7aurum.com"
                     value={inviteForm.email}
                     onChange={(e) => setInviteForm(p => ({ ...p, email: e.target.value }))}
@@ -859,7 +797,7 @@ export default function StaffManagement() {
                     <input
                       id="invite-empid"
                       type="text"
-                      className="atrium-input"
+                      className="form-input"
                       placeholder="cth: PG-004"
                       value={inviteForm.employeeId}
                       onChange={(e) => setInviteForm(p => ({ ...p, employeeId: e.target.value }))}
@@ -873,7 +811,7 @@ export default function StaffManagement() {
                     </label>
                     <select
                       id="invite-shift"
-                      className="atrium-input"
+                      className="form-input"
                       value={inviteForm.shift}
                       onChange={(e) => setInviteForm(p => ({ ...p, shift: e.target.value }))}
                       disabled={inviteLoading}
@@ -893,7 +831,7 @@ export default function StaffManagement() {
                   <input
                     id="invite-phone"
                     type="tel"
-                    className="atrium-input"
+                    className="form-input"
                     placeholder="cth: 08123456789"
                     value={inviteForm.phone}
                     onChange={(e) => setInviteForm(p => ({ ...p, phone: e.target.value }))}
@@ -905,18 +843,18 @@ export default function StaffManagement() {
                   <label className="form-label">Role Akun Terdaftar</label>
                   <input
                     type="text"
-                    className="atrium-input"
+                    className="form-input"
                     value="Penjaga Gudang (warehouse_keeper) — Terkunci"
                     disabled
-                    style={{ backgroundColor: '#F1F5F9', color: '#64748b' }}
+                    style={{ backgroundColor: 'var(--color-bg-subtle, #F3F4F6)', color: 'var(--color-text-muted)' }}
                   />
                 </div>
               </div>
 
-              <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', backgroundColor: '#FAF9FB', borderRadius: '0 0 20px 20px' }}>
+              <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', backgroundColor: 'var(--color-bg-subtle, #FAFAFA)' }}>
                 <button
                   type="button"
-                  className="btn-atrium-outline"
+                  className="btn btn-secondary"
                   onClick={() => setIsInviteModalOpen(false)}
                   disabled={inviteLoading}
                 >
@@ -924,7 +862,7 @@ export default function StaffManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-atrium-primary"
+                  className="btn btn-primary"
                   disabled={inviteLoading}
                 >
                   {inviteLoading ? (
@@ -950,11 +888,11 @@ export default function StaffManagement() {
       {/* ============================================================ */}
       {editingStaff && (
         <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title">
-          <div className="modal-content" style={{ maxWidth: '520px', borderRadius: '20px' }}>
+          <div className="modal-content" style={{ maxWidth: '520px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Edit2 size={18} color="#2563EB" />
-                <h3 id="edit-modal-title" style={{ margin: 0, fontWeight: 700 }}>Edit Data Petugas Gudang</h3>
+                <Edit2 size={18} color="var(--color-primary)" />
+                <h3 id="edit-modal-title">Edit Data Penjaga Gudang</h3>
               </div>
               <button
                 type="button"
@@ -976,7 +914,7 @@ export default function StaffManagement() {
                   <input
                     id="edit-fullname"
                     type="text"
-                    className="atrium-input"
+                    className="form-input"
                     value={editForm.fullName}
                     onChange={(e) => setEditForm(p => ({ ...p, fullName: e.target.value }))}
                     disabled={editLoading}
@@ -991,13 +929,13 @@ export default function StaffManagement() {
                   <input
                     id="edit-email"
                     type="email"
-                    className="atrium-input"
+                    className="form-input"
                     value={editForm.email}
                     onChange={(e) => setEditForm(p => ({ ...p, email: e.target.value }))}
                     disabled={editLoading}
                     required
                   />
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                     Perubahan email akan disinkronkan ke akun autentikasi pengguna.
                   </span>
                 </div>
@@ -1010,7 +948,7 @@ export default function StaffManagement() {
                     <input
                       id="edit-empid"
                       type="text"
-                      className="atrium-input"
+                      className="form-input"
                       value={editForm.employeeId}
                       onChange={(e) => setEditForm(p => ({ ...p, employeeId: e.target.value }))}
                       disabled={editLoading}
@@ -1023,15 +961,15 @@ export default function StaffManagement() {
                     </label>
                     <select
                       id="edit-shift"
-                      className="atrium-input"
+                      className="form-input"
                       value={editForm.shift}
                       onChange={(e) => setEditForm(p => ({ ...p, shift: e.target.value }))}
                       disabled={editLoading}
                     >
                       <option value="">— Belum Ditentukan —</option>
-                      <option value="Pagi">Pagi (08:00 - 16:00)</option>
-                      <option value="Siang">Siang (13:00 - 21:00)</option>
-                      <option value="Malam">Malam (21:00 - 06:00)</option>
+                      <option value="Pagi">Pagi</option>
+                      <option value="Siang">Siang</option>
+                      <option value="Malam">Malam</option>
                       <option value="Fleksibel">Fleksibel</option>
                     </select>
                   </div>
@@ -1039,12 +977,12 @@ export default function StaffManagement() {
 
                 <div className="form-group">
                   <label className="form-label" htmlFor="edit-phone">
-                    Nomor Telepon / WhatsApp
+                    Nomor Telepon
                   </label>
                   <input
                     id="edit-phone"
                     type="tel"
-                    className="atrium-input"
+                    className="form-input"
                     value={editForm.phone}
                     onChange={(e) => setEditForm(p => ({ ...p, phone: e.target.value }))}
                     disabled={editLoading}
@@ -1052,24 +990,24 @@ export default function StaffManagement() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Role Akun Terdaftar</label>
+                  <label className="form-label">Role Akun</label>
                   <input
                     type="text"
-                    className="atrium-input"
+                    className="form-input"
                     value="Penjaga Gudang (warehouse_keeper) — Terkunci"
                     disabled
-                    style={{ backgroundColor: '#F1F5F9', color: '#64748b' }}
+                    style={{ backgroundColor: 'var(--color-bg-subtle, #F3F4F6)', color: 'var(--color-text-muted)' }}
                   />
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem', display: 'block' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
                     Peran akun tidak dapat diubah menjadi Administrator untuk mencegah eskalasi hak istimewa.
                   </span>
                 </div>
               </div>
 
-              <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', backgroundColor: '#FAF9FB', borderRadius: '0 0 20px 20px' }}>
+              <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', backgroundColor: 'var(--color-bg-subtle, #FAFAFA)' }}>
                 <button
                   type="button"
-                  className="btn-atrium-outline"
+                  className="btn btn-secondary"
                   onClick={() => setEditingStaff(null)}
                   disabled={editLoading}
                 >
@@ -1077,7 +1015,7 @@ export default function StaffManagement() {
                 </button>
                 <button
                   type="submit"
-                  className="btn-atrium-primary"
+                  className="btn btn-primary"
                   disabled={editLoading}
                 >
                   {editLoading ? (
@@ -1103,7 +1041,7 @@ export default function StaffManagement() {
       {/* ============================================================ */}
       {confirmToggleStaff && (
         <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="toggle-modal-title">
-          <div className="modal-content" style={{ maxWidth: '460px', borderRadius: '20px' }}>
+          <div className="modal-content" style={{ maxWidth: '460px' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {confirmToggleStaff.is_active ? (
@@ -1111,7 +1049,7 @@ export default function StaffManagement() {
                 ) : (
                   <CheckCircle2 size={18} color="#16A34A" />
                 )}
-                <h3 id="toggle-modal-title" style={{ margin: 0, fontWeight: 700 }}>
+                <h3 id="toggle-modal-title">
                   {confirmToggleStaff.is_active ? 'Nonaktifkan Akun Petugas?' : 'Aktifkan Kembali Akun Petugas?'}
                 </h3>
               </div>
@@ -1140,26 +1078,20 @@ export default function StaffManagement() {
               </p>
 
               {confirmToggleStaff.is_active ? (
-                <div style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '12px', padding: '0.875rem 1rem', fontSize: '0.8125rem', color: '#991B1B', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong>Dampak Penonaktifan:</strong> Petugas ini akan langsung terblokir dari login dan tidak dapat memproses transaksi inventaris atau peminjaman barang hingga diaktifkan kembali oleh Administrator.
-                  </div>
+                <div className="alert alert-danger" style={{ fontSize: '0.8125rem' }}>
+                  <strong>Dampak Penonaktifan:</strong> Petugas ini akan langsung terblokir dari login dan tidak dapat memproses transaksi inventaris atau peminjaman barang hingga diaktifkan kembali.
                 </div>
               ) : (
-                <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '12px', padding: '0.875rem 1rem', fontSize: '0.8125rem', color: '#166534', display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
-                  <CheckCircle2 size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                  <div>
-                    <strong>Dampak Pengaktifan:</strong> Petugas akan kembali memiliki izin operasional penuh untuk masuk dan mengakses modul gudang yang ditugaskan.
-                  </div>
+                <div className="alert alert-success" style={{ fontSize: '0.8125rem' }}>
+                  <strong>Dampak Pengaktifan:</strong> Petugas akan kembali memiliki izin penuh untuk masuk dan mengakses fitur operasional gudang.
                 </div>
               )}
             </div>
 
-            <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid #E2E8F0', display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', backgroundColor: '#FAF9FB', borderRadius: '0 0 20px 20px' }}>
+            <div style={{ padding: '1rem 1.25rem', borderTop: '1px solid var(--color-border)', display: 'flex', justifyContent: 'flex-end', gap: '0.625rem', backgroundColor: 'var(--color-bg-subtle, #FAFAFA)' }}>
               <button
                 type="button"
-                className="btn-atrium-outline"
+                className="btn btn-secondary"
                 onClick={() => setConfirmToggleStaff(null)}
                 disabled={toggleLoading}
               >
@@ -1167,8 +1099,7 @@ export default function StaffManagement() {
               </button>
               <button
                 type="button"
-                className={confirmToggleStaff.is_active ? 'btn-atrium-danger' : 'btn-atrium-primary'}
-                style={!confirmToggleStaff.is_active ? { backgroundColor: '#15803D', borderColor: '#15803D' } : {}}
+                className={confirmToggleStaff.is_active ? 'btn btn-danger' : 'btn btn-success'}
                 onClick={handleToggleActiveConfirm}
                 disabled={toggleLoading}
               >

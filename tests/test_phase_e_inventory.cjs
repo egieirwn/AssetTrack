@@ -1,6 +1,6 @@
 /**
  * Test Suite: Phase E — Warehouse Inventory Management
- * PT Vinix Seven Aurum Warehouse Management System
+ * SiPenitip — PT Vinix Seven Aurum
  *
  * Memvalidasi:
  * 1. Validasi metadata dan field wajib master barang (name, category_id, storage_location_id).

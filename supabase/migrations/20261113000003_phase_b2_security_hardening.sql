@@ -1,6 +1,6 @@
 -- ============================================================
 -- PHASE B.2 CORRECTIVE MIGRATION: SQL Security Hardening & Privilege Lockdown
--- Project: PT Vinix Seven Aurum Warehouse Management System
+-- Project: SiPenitip — PT Vinix Seven Aurum Warehouse Management System
 -- Date: 2026-11-13
 --
 -- PURPOSE:

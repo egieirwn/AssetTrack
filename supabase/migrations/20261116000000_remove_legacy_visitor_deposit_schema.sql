@@ -42,12 +42,12 @@
 --    - public.activity_logs
 -- ============================================================
 
--- 1. HAPUS FUNGSI & RPC KHUSUS SKEMA LEGASI
+-- 1. HAPUS FUNGSI & RPC KHUSUS PENITIPAN BARANG
 DROP FUNCTION IF EXISTS public.rpc_create_deposit(UUID, UUID, TEXT, JSONB);
 DROP FUNCTION IF EXISTS public.rpc_complete_pickup(UUID, UUID, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT, TEXT);
 DROP FUNCTION IF EXISTS public.generate_transaction_code();
 
--- 2. HAPUS KEBIJAKAN STORAGE UNTUK BUCKET LEGASI
+-- 2. HAPUS KEBIJAKAN STORAGE UNTUK BUCKET PENITIPAN
 DROP POLICY IF EXISTS "Staff can upload deposit item photos" ON storage.objects;
 
 -- 3. HAPUS TABEL ANAK (CHILD TABLES) TERLEBIH DAHULU

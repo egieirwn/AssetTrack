@@ -1,423 +1,529 @@
 ================================================================================
-   USER JOURNEY — PT VINIX SEVEN AURUM WAREHOUSE MANAGEMENT SYSTEM
+      USER JOURNEY - SISTEM INFORMASI PENITIPAN BARANG PENGUNJUNG (SiPenitip)
 ================================================================================
-Versi      : 2.0
-Tanggal    : 18 November 2026
-Aplikasi   : Warehouse Inventory & Borrowing Management System (Vinix WMS)
-Perusahaan : PT Vinix Seven Aurum
-Stack      : React 19 + Vite 6 + Supabase PostgreSQL (RLS & RPC) + Atrium Design
+Versi      : 1.0
+Tanggal    : 17 November 2026
+Aplikasi   : SiPenitip - Sistem Informasi Penitipan Barang Pengunjung Perusahaan
 ================================================================================
 
 
 ================================================================================
-  DAFTAR AKTOR SISTEM
+  DAFTAR AKTOR
 ================================================================================
 
-  1. PENJAGA GUDANG (Warehouse Keeper)
-     - Petugas operasional harian di area gudang perusahaan.
-     - Bertugas mengelola stok barang, mencatat peminjaman alat kerja oleh
-       karyawan, memproses pengembalian alat, memeriksa kondisi fisik
-       (baik/rusak), serta mengelola mutasi stok.
-     - Hak Akses: Seluruh modul operasional gudang.
+  1. SATPAM (Security Guard)
+     - Petugas keamanan di pintu masuk perusahaan
+     - Bertugas mencatat penitipan dan pengembalian barang
+     - Akses: Semua fitur operasional (deposit, pickup, daftar aktif)
 
-  2. ADMINISTRATOR (Admin)
-     - Kepala operasional / IT / supervisor gudang.
-     - Bertugas mengawasi seluruh aktivitas, mengelola akun staf/petugas,
-       mengatur master kategori & lokasi rak/loker, serta mengunduh laporan
-       dan audit trail mutasi stok.
-     - Hak Akses: Akses penuh (operasional + manajemen sistem + laporan).
+  2. ADMIN
+     - Administrator sistem
+     - Bertugas mengelola kategori, lokasi penyimpanan, staf, dan laporan
+     - Akses: Semua fitur operasional + fitur manajemen admin
 
-  3. KARYAWAN PEMINJAM (Borrower)
-     - Karyawan internal dari berbagai departemen (Teknik, IT, Operasional, dll.)
-       yang meminjam peralatan atau perlengkapan kerja dari gudang.
-     - Tercatat dalam Direktori Peminjam (NIK, Nama, Departemen, Kontak).
-     - Menerima bukti tanda pinjam fisik dengan QR Code saat serah terima alat.
+  3. PENGUNJUNG (Visitor)
+     - Tamu/pengunjung yang datang ke perusahaan
+     - Menyerahkan barang bawaan untuk dititipkan
+     - Tidak memiliki akun di sistem (hanya tercatat sebagai data)
 
 
 ================================================================================
-  USER JOURNEY 1: PENJAGA GUDANG — LOGIN & PEMANTAUAN DASHBOARD
+  USER JOURNEY 1: SATPAM - LOGIN & AKSES SISTEM
 ================================================================================
 
-  TUJUAN     : Masuk ke sistem dan memantau kondisi operasional gudang terkini.
-  PEMICU     : Penjaga gudang memulai jam kerja dan membuka aplikasi di browser.
+  TUJUAN     : Satpam dapat masuk ke sistem dan mengakses dashboard
+  PEMICU     : Satpam mulai shift kerja dan membuka aplikasi SiPenitip
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Penjaga gudang mengakses aplikasi melalui browser.
-          | Rute: /login
+  Step 1 | Satpam membuka browser dan mengakses URL aplikasi SiPenitip
+          | Halaman: Login Page (/)
           |
-  Step 2 | Memasukkan kredensial:
-          |   - Email: keeper@vinix.com
-          |   - Password: [password_terdaftar]
-          | Klik tombol "Masuk ke Sistem".
+  Step 2 | Satpam memasukkan:
+          |   - Email    : satpam@perusahaan.com
+          |   - Password : xxxxxxxx
+          | Lalu klik tombol "Masuk"
           |
-  Step 3 | Supabase Auth memvalidasi email, password, dan status akun:
-          |   - Memastikan akun berstatus aktif (is_active = TRUE).
-          |   - Mengambil data profil dan role (warehouse_keeper).
-          |   - Redirect otomatis ke /dashboard.
+  Step 3 | Sistem memverifikasi kredensial via Supabase Auth
+          |   [SUKSES] -> Redirect ke Dashboard (/dashboard)
+          |   [GAGAL]  -> Tampil pesan error "Email atau password salah"
           |
-  Step 4 | Penjaga gudang melihat ringkasan metrik real-time di Dashboard:
-          |   - Total SKU Barang Aktif.
-          |   - Total Unit Fisik Tersedia vs Sedang Dipinjam.
-          |   - Unit Barang Rusak (Damaged) yang membutuhkan perbaikan.
-          |   - Jumlah Transaksi Peminjaman Aktif & Peringatan Terlambat (Overdue).
-          |   - Status Kapasitas Rak/Loker (Tersedia, Penuh, Nonaktif).
+  Step 4 | Satpam melihat Dashboard berisi:
+          |   - Ringkasan jumlah titipan aktif hari ini
+          |   - Jumlah pengunjung hari ini
+          |   - Jumlah titipan selesai hari ini
+          |   - Shortcut ke menu utama
           |
-  Step 5 | Penjaga gudang dapat memilih aksi cepat (Quick Actions) atau
-          | menavigasi menu melalui Atrium Sidebar.
+  Step 5 | Satpam siap menggunakan aplikasi melalui menu Sidebar
 
-  HASIL      : Penjaga gudang terautentikasi dan memiliki gambaran menyeluruh
-               mengenai ketersediaan alat dan status pinjaman hari ini.
+  HASIL      : Satpam berhasil login dan dapat melihat kondisi titipan harian
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 2: PENJAGA GUDANG — PENCATATAN PEMINJAMAN MULTI-BARANG
+  USER JOURNEY 2: SATPAM - PENITIPAN BARANG BARU
 ================================================================================
 
-  TUJUAN     : Mencatat transaksi peminjaman beberapa alat kerja oleh karyawan.
-  PEMICU     : Karyawan mendatangi meja gudang untuk meminjam perlengkapan kerja.
+  TUJUAN     : Satpam mencatat pengunjung yang menitipkan barang
+  PEMICU     : Pengunjung datang ke meja satpam dan ingin menitipkan barang
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Penjaga gudang membuka menu "Peminjaman" -> "Tambah Peminjaman".
-          | Rute: /peminjaman/tambah
+  Step 1 | Satpam klik menu "Titipan Baru" pada Sidebar
+          | Halaman: New Deposit (/deposits/new)
           |
-  Step 2 | DATA PEMINJAM
-          | Memilih peminjam dari Direktori Peminjam:
-          |   - Pencarian instan berdasarkan Nama, NIK, atau Departemen.
-          |   - Opsi tambah data peminjam baru secara langsung jika belum ada.
+  Step 2 | BAGIAN A - DATA PENGUNJUNG
+          | Satpam memilih pengunjung:
+          |   [Opsi 1] Cari pengunjung lama berdasarkan nama/KTP
+          |   [Opsi 2] Input pengunjung baru:
+          |     - Nama Lengkap     : (wajib)
+          |     - Nomor KTP/Identitas : (wajib)
+          |     - Nomor HP         : (opsional)
+          |     - Instansi/Perusahaan : (opsional)
+          |     - Keperluan        : (wajib - dropdown)
           |
-  Step 3 | ESTIMASI PENGEMBALIAN & KEPERLUAN
-          |   - Menentukan perkiraan tanggal & waktu kembali (expected_return_at).
-          |   - Menuliskan keperluan peminjaman (proyek, dinas luar, perawatan).
+  Step 3 | BAGIAN B - DATA BARANG
+          | Satpam menambahkan daftar barang yang dititipkan:
+          |   - Nama Barang       : (wajib)
+          |   - Kategori          : (dropdown: Tas, Helm, HP, dll.)
+          |   - Deskripsi/Warna   : (opsional, untuk identifikasi)
+          |   - Jumlah            : (default 1)
+          |   Klik "Tambah Barang" untuk menambah barang berikutnya
           |
-  Step 4 | DAFTAR BARANG YANG DIPINJAM (Multi-Item)
-          | Menambahkan satu atau lebih barang yang akan diserahkan:
-          |   - Memilih barang dari katalog (menampilkan saldo tersedia).
-          |   - Untuk Aset Individual: memilih nomor seri spesifik (asset_serial).
-          |   - Untuk Barang Massal: memasukkan kuantitas (quantity).
-          |   - Validasi atomik: sistem menolak jika kuantitas melebihi stok tersedia.
-          |   - Klik "+ Tambah Barang" untuk item selanjutnya.
+  Step 4 | BAGIAN C - LOKASI PENYIMPANAN
+          | Satpam memilih lokasi/loker penyimpanan tersedia:
+          |   - Dropdown rak/loker yang masih tersedia
+          |   - Sistem otomatis memfilter lokasi penuh
           |
-  Step 5 | KONFIRMASI & EKSEKUSI
-          | Penjaga gudang meninjau ringkasan dan menekan "Terbitkan Peminjaman".
-          | Sistem mengeksekusi RPC rpc_create_borrowing() secara atomik:
-          |   - Membuat header transaksi dengan kode unik: BRW-YYYYMMDD-XXXX.
-          |   - Menyimpan rincian seluruh item ke borrowing_items.
-          |   - Mengurangi saldo available_qty dan menambah borrowed_qty.
-          |   - Mencatat ledger mutasi stok permanen (jenis: 'borrowed').
+  Step 5 | Satpam klik tombol "Simpan Titipan"
+          | Sistem memproses via RPC rpc_create_deposit():
+          |   - Generate kode transaksi unik (format: DEP-YYYYMMDD-XXXX)
+          |   - Simpan data pengunjung (baru/update)
+          |   - Simpan detail barang
+          |   - Update status lokasi penyimpanan -> 'occupied'
+          |   - Catat log transaksi
           |
-  Step 6 | CETAK TANDA TERIMA PINJAM
-          | Sistem membuka modal detail peminjaman dengan Tanda Terima Resmi:
-          |   - Memuat Kode Tiket, QR Code, Nama Peminjam, Daftar Lengkap Alat,
-          |     Nomor Seri, Waktu Pinjam, dan Batas Waktu Pengembalian.
-          |   - Penjaga gudang mencetak struk dan menyerahkan alat ke peminjam.
+  Step 6 | Sistem menampilkan Kartu Titipan (Deposit Card):
+          |   - Kode Transaksi (QR Code)
+          |   - Nama Pengunjung
+          |   - Daftar Barang
+          |   - Lokasi Penyimpanan
+          |   - Waktu Penitipan
+          |   - Tombol "Cetak Kartu"
+          |
+  Step 7 | Satpam mencetak kartu dan menyerahkan ke pengunjung
+          | Satpam menyimpan barang di loker/rak sesuai yang tertera
 
-  HASIL      : Transaksi pinjam tercatat atomik, stok gudang terpotong akurat,
-               dan peminjam mengantongi bukti fisik bertanda QR Code.
+  HASIL      : Barang berhasil dicatat, kode QR dicetak, barang disimpan
+  CATATAN    : Kode transaksi (QR Code) adalah bukti pengambilan kembali
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 3: PENJAGA GUDANG — PENGEMBALIAN ALAT & PEMISAHAN KONDISI
+  USER JOURNEY 3: SATPAM - PENGAMBILAN BARANG (PICKUP)
 ================================================================================
 
-  TUJUAN     : Memproses serah terima kembali alat, memeriksa kondisi fisik,
-               dan mengembalikan saldo stok ke kondisi siap pakai atau rusak.
-  PEMICU     : Karyawan mengembalikan barang pinjaman ke meja gudang.
+  TUJUAN     : Satpam memproses pengambilan barang oleh pengunjung
+  PEMICU     : Pengunjung kembali ke meja satpam untuk mengambil titipannya
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Penjaga gudang membuka menu "Pengembalian Barang".
-          | Rute: /pengembalian atau /peminjaman/:id/pengembalian
+  Step 1 | Satpam klik menu "Ambil Barang" pada Sidebar
+          | Halaman: Pickup (/pickup)
           |
-  Step 2 | PENCARIAN TIKET PINJAMAN
-          | Menemukan transaksi peminjaman aktif melalui:
-          |   - Scan QR Code dari struk peminjaman menggunakan kamera / pemindai.
-          |   - Pencarian kode tiket berformat BRW-YYYYMMDD-XXXX.
-          |   - Pencarian nama peminjam pada dropdown tiket aktif.
+  Step 2 | IDENTIFIKASI TRANSAKSI
+          | Satpam mencari transaksi dengan salah satu cara:
+          |   [Cara 1] Scan QR Code dari kartu titipan pengunjung
+          |             -> Aktifkan kamera, arahkan ke QR Code
+          |   [Cara 2] Input manual kode transaksi (DEP-YYYYMMDD-XXXX)
+          |   [Cara 3] Cari berdasarkan nama pengunjung
           |
-  Step 3 | PEMERIKSAAN FISIK & INPUT PENGEMBALIAN
-          | Sistem menampilkan daftar seluruh barang yang dipinjam beserta
-          | sisa kuantitas yang belum dikembalikan (remaining quantity).
-          | Untuk setiap baris barang, petugas mengisi:
-          |   - Jumlah unit kembali dalam kondisi BAIK (good_qty).
-          |   - Jumlah unit kembali dalam kondisi RUSAK (damaged_qty).
-          |   - Catatan kerusakan fisik (jika terdapat unit rusak).
+  Step 3 | Sistem menampilkan detail transaksi:
+          |   - Kode Transaksi
+          |   - Nama Pengunjung
+          |   - Daftar Barang (dengan checklist)
+          |   - Lokasi Penyimpanan
+          |   - Waktu Penitipan
           |
-  Step 4 | VERIFIKASI PENGEMBALIAN BERTAHAP ATAU PENUH
-          |   - Jika semua barang dikembalikan penuh -> status menjadi 'returned'.
-          |   - Jika baru sebagian dikembalikan -> status menjadi 'partial_returned'.
+  Step 4 | VERIFIKASI IDENTITAS
+          | Satpam memeriksa apakah yang mengambil adalah:
+          |   [Opsi A] Pengunjung sendiri -> Cocokkan KTP
+          |   [Opsi B] Perwakilan (orang lain)
+          |             -> Cek Surat Kuasa / Dokumen Bukti Kuasa
+          |             -> Input nama & KTP perwakilan ke sistem
           |
-  Step 5 | KONFIRMASI MUTASI STOK
-          | Petugas menekan "Konfirmasi Pengembalian".
-          | Sistem mengeksekusi RPC pengembalian secara aman:
-          |   - Unit kondisi BAIK: saldo available_qty bertambah (siap dipinjam).
-          |   - Unit kondisi RUSAK: saldo damaged_qty bertambah (dikarantina).
-          |   - Saldo borrowed_qty berkurang sesuai total unit yang kembali.
-          |   - Menuliskan pencatatan permanen ke stock_movements ledger.
+  Step 5 | CHECKLIST BARANG
+          | Satpam mencentang setiap barang yang dikembalikan:
+          |   [x] Tas Ransel Hitam
+          |   [x] Helm Full Face Merah
+          |   [ ] ... (barang lain)
+          | Pastikan semua barang tercentang sebelum konfirmasi
           |
-  Step 6 | Tampil notifikasi sukses dan ringkasan mutasi pengembalian.
+  Step 6 | Satpam klik "Konfirmasi Pengambilan"
+          | Sistem memproses via RPC rpc_complete_pickup():
+          |   - Update status transaksi -> 'completed'
+          |   - Catat waktu pengambilan
+          |   - Catat identitas pengambil (sendiri/perwakilan)
+          |   - Update lokasi penyimpanan -> 'available'
+          |   - Catat log transaksi
+          |
+  Step 7 | Sistem menampilkan konfirmasi sukses
+          | Satpam menyerahkan semua barang ke pengunjung/perwakilan
 
-  HASIL      : Barang kembali ke gudang, alat rusak langsung terisolasi dari
-               katalog siap pakai, dan audit trail pergerakan stok tercatat.
+  HASIL      : Barang berhasil diserahkan, lokasi penyimpanan kembali kosong
+  CATATAN    : Jika perwakilan, data surat kuasa wajib dicatat di sistem
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 4: PENJAGA GUDANG — MANAJEMEN MASTER INVENTARIS
+  USER JOURNEY 4: SATPAM - MELIHAT DAFTAR TITIPAN AKTIF
 ================================================================================
 
-  TUJUAN     : Mendaftarkan barang baru atau memperbarui informasi peralatan.
-  PEMICU     : Pengadaan barang baru atau perubahan penempatan rak gudang.
+  TUJUAN     : Satpam memantau semua barang yang sedang dititipkan
+  PEMICU     : Satpam ingin mengecek status titipan yang belum diambil
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Penjaga gudang membuka menu "Inventaris Gudang".
-          | Rute: /inventaris
+  Step 1 | Satpam klik menu "Titipan Aktif" pada Sidebar
+          | Halaman: Active Deposits (/deposits/active)
           |
-  Step 2 | Tampil katalog inventaris dengan pencarian cepat, filter kategori,
-          | filter lokasi rak, dan status stok (Tersedia, Habis, Kritis).
+  Step 2 | Sistem menampilkan tabel daftar titipan aktif:
+          |   - Kode Transaksi
+          |   - Nama Pengunjung
+          |   - Jumlah Barang
+          |   - Lokasi Penyimpanan
+          |   - Waktu Masuk
+          |   - Durasi (sudah berapa lama)
           |
-  Step 3 | PENDAFTARAN BARANG BARU (Rute: /inventaris/tambah)
-          |   - Mengisi Nama Barang dan Kode SKU unik (contoh: ITM-LPT-001).
-          |   - Memilih Kategori (contoh: Laptop, Perkakas, Audio Visual).
-          |   - Memilih Lokasi Rak/Loker penyimpanan.
-          |   - Memilih Tipe Pelacakan:
-          |       * Individual: untuk aset berharga (wajib Nomor Seri unik).
-          |       * Quantity (Bulk): untuk barang konsumabel / perkakas massal.
-          |   - Mengatur Ambang Batas Minimum (Min Quantity Threshold).
+  Step 3 | Satpam dapat melakukan:
+          |   - Filter berdasarkan lokasi/tanggal
+          |   - Klik baris untuk melihat detail
+          |   - Langsung proses Pickup dari halaman ini
           |
-  Step 4 | Menyimpan data barang. Trigger database menjamin konsistensi
-          | kuantitas awal dan mencegah mutasi langsung di luar mekanisme audit.
-
-  HASIL      : Master barang terdaftar rapi dengan aturan pelacakan yang tepat.
+  HASIL      : Satpam mengetahui semua titipan yang masih aktif
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 5: PENJAGA GUDANG — PENERIMAAN STOK & PENYESUAIAN STOK
+  USER JOURNEY 5: SATPAM - MELIHAT RIWAYAT TITIPAN
 ================================================================================
 
-  TUJUAN     : Menambah kuantitas fisik (barang masuk) atau melakukan koreksi
-               stok setelah stock opname fisik.
-  PEMICU     : Penerimaan pasokan pengadaan baru atau penyesuaian selisih stok.
+  TUJUAN     : Satpam melihat riwayat semua transaksi yang sudah selesai
+  PEMICU     : Satpam perlu mengecek histori transaksi tertentu
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Rute: /inventaris/barang-masuk (Penerimaan Stok Baru)
-          |   - Memilih barang yang diterima.
-          |   - Memasukkan kuantitas penambahan dan nomor referensi PO/Surat Jalan.
-          |   - Sistem mencatat mutasi jenis 'stock_in' dan memperbarui stok.
+  Step 1 | Satpam klik menu "Riwayat" pada Sidebar
+          | Halaman: Deposit History (/deposits/history)
           |
-  Step 2 | Rute: /inventaris/penyesuaian-stok (Stock Adjustment)
-          |   - Memilih barang dan lokasi fisik.
-          |   - Menginput kuantitas fisik sebenarnya setelah stock opname.
-          |   - Mengisi alasan penyesuaian (selisih fisik, koreksi administrasi).
-          |   - Sistem menghitung selisih (+/-) dan mencatat mutasi 'adjustment'.
+  Step 2 | Sistem menampilkan daftar transaksi selesai dengan filter:
+          |   - Filter tanggal (dari - sampai)
+          |   - Filter nama pengunjung
+          |   - Filter kode transaksi
           |
-  Step 3 | Rute: /inventaris/pergerakan-stok (Ledger Mutasi Stok)
-          |   - Melihat riwayat pergerakan stok permanen (append-only ledger).
-
-  HASIL      : Saldo stok selalu sinkron dengan kondisi fisik di gudang.
-  -------------------------------------------------------------------------
-
-
-================================================================================
-  USER JOURNEY 6: PENJAGA GUDANG — DIREKTORI PEMINJAM
-================================================================================
-
-  TUJUAN     : Mengelola data karyawan peminjam dan melihat riwayat pinjaman per orang.
-  PEMICU     : Penambahan data karyawan baru atau peninjauan kebiasaan pinjam karyawan.
-
-  LANGKAH-LANGKAH:
-  -------------------------------------------------------------------------
-  Step 1 | Buka menu "Direktori Peminjam".
-          | Rute: /peminjam
+  Step 3 | Satpam dapat melihat detail setiap transaksi:
+          |   - Semua data penitipan
+          |   - Waktu masuk dan waktu keluar
+          |   - Identitas pengambil (sendiri/perwakilan)
           |
-  Step 2 | Mencari karyawan berdasarkan Nama, NIK, atau Departemen.
-  Step 3 | Menambah atau memperbarui profil peminjam (NIK, Nama, Dept, No. Telp, Email).
-  Step 4 | Membuka rincian peminjam untuk melihat riwayat alat apa saja yang pernah
-          | dan sedang dipinjam oleh karyawan tersebut.
-          | Proteksi referensial: data peminjam yang memiliki riwayat transaksi
-          | tidak dapat dihapus permanen guna menjaga integritas audit.
-
-  HASIL      : Data peminjam terorganisasi dan riwayat peminjaman per karyawan terlacak.
+  HASIL      : Satpam dapat melacak histori transaksi penitipan
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 7: STAF GUDANG — LUPA & RESET PASSWORD
+  USER JOURNEY 6: SATPAM - LUPA PASSWORD
 ================================================================================
 
-  TUJUAN     : Memulihkan akses akun petugas saat lupa kata sandi.
-  PEMICU     : Petugas tidak dapat masuk ke sistem karena lupa password.
+  TUJUAN     : Satpam dapat mereset password yang terlupakan
+  PEMICU     : Satpam tidak bisa login karena lupa password
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Pada halaman /login, klik tautan "Lupa Kata Sandi?".
-          | Rute: /forgot-password
-  Step 2 | Memasukkan alamat email akun kerja yang terdaftar.
-  Step 3 | Sistem mengirimkan tautan pemulihan kata sandi via email.
-  Step 4 | Petugas membuka email dan mengklik tautan reset password.
-          | Rute: /reset-password
-  Step 5 | Mengisi kata sandi baru (minimal 6 karakter) dan melakukan konfirmasi.
-  Step 6 | Sistem memperbarui kredensial akun dan mengarahkan kembali ke /login.
+  Step 1 | Di halaman Login, satpam klik link "Lupa Password?"
+          | Halaman: Forgot Password (/forgot-password)
+          |
+  Step 2 | Satpam memasukkan email akun yang terdaftar
+          | Klik "Kirim Link Reset"
+          |
+  Step 3 | Sistem mengirim email berisi link reset password via Supabase
+          |
+  Step 4 | Satpam membuka email, klik link "Reset Password"
+          | Halaman: Reset Password (/reset-password)
+          |
+  Step 5 | Satpam memasukkan password baru (2x konfirmasi)
+          | Klik "Simpan Password Baru"
+          |
+  Step 6 | Sistem memperbarui password, satpam diarahkan ke Login
+          | Satpam login dengan password baru
 
-  HASIL      : Kata sandi berhasil diperbarui dan petugas dapat login kembali.
+  HASIL      : Satpam berhasil reset password dan dapat login kembali
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 8: ADMIN — MANAJEMEN MASTER KATEGORI & LOKASI RAK
+  USER JOURNEY 7: ADMIN - MANAJEMEN KATEGORI BARANG
 ================================================================================
 
-  TUJUAN     : Mengatur master kategori barang dan denah rak/loker penyimpanan.
-  PEMICU     : Penambahan zona gudang baru atau pengelompokan jenis barang baru.
+  TUJUAN     : Admin mengelola kategori barang yang dapat dititipkan
+  PEMICU     : Ada kebutuhan tambah/ubah/hapus kategori barang
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Admin login dengan akun ber-role 'admin'.
-  Step 2 | Master Kategori (Rute: /kategori-barang)
-          |   - Menambah, mengubah nama, atau menonaktifkan kategori peralatan.
-  Step 3 | Master Lokasi Penyimpanan (Rute: /lokasi-penyimpanan)
-          |   - Mengatur kode rak/loker (misal: RAK-A1, LKR-B03).
-          |   - Mengatur kapasitas maksimum unit.
-          |   - Meninjau status keterisian rak (tersedia, penuh, dinonaktifkan).
+  Step 1 | Admin login dengan akun role 'admin'
+          | Klik menu "Kategori Barang" pada Sidebar (hanya tampil untuk admin)
+          | Halaman: Item Categories (/admin/categories)
+          |
+  Step 2 | TAMBAH KATEGORI
+          |   - Klik tombol "+ Tambah Kategori"
+          |   - Isi Nama Kategori (contoh: "Laptop", "Dokumen Penting")
+          |   - Isi Deskripsi (opsional)
+          |   - Klik "Simpan"
+          |
+  Step 3 | EDIT KATEGORI
+          |   - Klik ikon edit pada baris kategori
+          |   - Ubah nama/deskripsi
+          |   - Klik "Simpan Perubahan"
+          |
+  Step 4 | HAPUS KATEGORI
+          |   - Klik ikon hapus pada baris kategori
+          |   - Konfirmasi penghapusan
+          |   - Kategori dihapus (jika tidak ada barang yang menggunakannya)
 
-  HASIL      : Tata ruang dan struktur kategori gudang terkelola dengan tertib.
+  HASIL      : Daftar kategori barang terupdate sesuai kebutuhan operasional
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 9: ADMIN — MANAJEMEN AKUN PETUGAS GUDANG
+  USER JOURNEY 8: ADMIN - MANAJEMEN LOKASI PENYIMPANAN
 ================================================================================
 
-  TUJUAN     : Mengelola akun penjaga gudang, persetujuan staf baru, dan status aktif.
-  PEMICU     : Perekrutan staf gudang baru, pergantian tugas, atau deaktivasi akun.
+  TUJUAN     : Admin mengelola rak/loker tempat penyimpanan barang titipan
+  PEMICU     : Ada penambahan/perubahan rak atau loker penyimpanan
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Buka menu "Manajemen Petugas" (hanya terlihat dan dapat diakses oleh Admin).
-          | Rute: /manajemen-petugas
-  Step 2 | Melihat daftar seluruh akun staf beserta role (Admin / Warehouse Keeper)
-          | dan status keaktifan (Aktif / Nonaktif / Menunggu Persetujuan).
-  Step 3 | Mengubah status aktif/nonaktif petugas:
-          |   - Akun yang dinonaktifkan langsung ditolak saat mencoba login.
-  Step 4 | Mendaftarkan petugas baru dengan role baku 'warehouse_keeper'.
-          | Keamanan: sistem database menolak upaya kenaikan role mandiri.
+  Step 1 | Admin klik menu "Lokasi Penyimpanan" pada Sidebar
+          | Halaman: Storage Locations (/admin/storage)
+          |
+  Step 2 | Admin melihat daftar semua lokasi beserta status:
+          |   - Kode Lokasi (contoh: RAK-A1, LOKER-01)
+          |   - Nama/Deskripsi Lokasi
+          |   - Status: "Tersedia" / "Terisi" / "Nonaktif"
+          |   - Kapasitas
+          |
+  Step 3 | TAMBAH LOKASI BARU
+          |   - Klik "+ Tambah Lokasi"
+          |   - Isi Kode Lokasi, Nama, Kapasitas, Tipe
+          |   - Klik "Simpan"
+          |
+  Step 4 | NONAKTIFKAN LOKASI
+          |   - Klik ikon nonaktif pada lokasi yang rusak/tidak terpakai
+          |   - Lokasi tidak akan muncul di dropdown saat penitipan baru
 
-  HASIL      : Akses ke sistem gudang terlindungi ketat sesuai hierarki wewenang.
+  HASIL      : Lokasi penyimpanan terkelola dengan status yang akurat
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 10: ADMIN — PUSAT LAPORAN OPERASIONAL & EKSPOR CSV
+  USER JOURNEY 9: ADMIN - MANAJEMEN STAF
 ================================================================================
 
-  TUJUAN     : Meninjau analisis operasional gudang dan mengunduh data audit resmi.
-  PEMICU     : Kebutuhan laporan mingguan/bulanan untuk manajemen perusahaan.
+  TUJUAN     : Admin mengelola akun staf (satpam) yang menggunakan sistem
+  PEMICU     : Ada penambahan staf baru, pergantian staf, atau staf resign
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  Step 1 | Buka menu "Pusat Laporan" (Rute: /laporan).
-  Step 2 | Memilih jenis laporan:
-          |   - Laporan Saldo Inventaris & Aset Rusak.
-          |   - Laporan Sirkulasi Peminjaman & Keterlambatan (Overdue).
-          |   - Laporan Buku Besar Mutasi Stok (Stock Movements Ledger).
-          |   - Laporan Jejak Audit Aktivitas (Activity Logs).
-  Step 3 | Menerapkan filter: rentang tanggal, status transaksi, departemen peminjam.
-  Step 4 | Menekan tombol "Ekspor CSV":
-          |   - File diunduh dalam format CSV standar Excel dengan UTF-8 BOM (\uFEFF).
-          |   - Dilengkapi proteksi sanitasi terhadap kerentanan CSV Formula Injection.
-  Step 5 | Tersedia opsi cetak format laporan formal (Print to PDF).
+  Step 1 | Admin klik menu "Manajemen Staf" pada Sidebar
+          | Halaman: Staff Management (/admin/staff)
+          |
+  Step 2 | TAMBAH STAF BARU
+          |   - Klik "+ Tambah Staf"
+          |   - Isi data staf:
+          |     * Nama Lengkap  : (wajib)
+          |     * Email         : (wajib, akan digunakan untuk login)
+          |     * ID Karyawan   : (wajib, contoh: SAT-001)
+          |     * Role          : satpam / admin
+          |   - Klik "Kirim Undangan"
+          |   - Sistem mengirim email undangan + link set password ke staf
+          |
+  Step 3 | NONAKTIFKAN STAF
+          |   - Klik ikon nonaktif pada staf yang sudah tidak bekerja
+          |   - Akun staf diblokir, tidak bisa login
+          |
+  Step 4 | RESET PASSWORD STAF
+          |   - Klik "Reset Password" pada baris staf
+          |   - Email reset password dikirim ke akun staf tersebut
 
-  HASIL      : Manajemen menerima laporan akurat yang siap diserahkan ke pimpinan.
+  HASIL      : Akun staf terkelola, hanya staf aktif yang bisa mengakses sistem
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  USER JOURNEY 11: KARYAWAN PEMINJAM — ALUR PEMINJAMAN & PENGEMBALIAN
+  USER JOURNEY 10: ADMIN - LAPORAN & STATISTIK
 ================================================================================
 
-  TUJUAN     : Menggambarkan pengalaman karyawan peminjam dari awal hingga akhir.
-  CATATAN    : Karyawan berinteraksi langsung di meja serah terima gudang.
+  TUJUAN     : Admin memantau performa operasional penitipan barang
+  PEMICU     : Admin ingin melihat laporan harian/bulanan
 
   LANGKAH-LANGKAH:
   -------------------------------------------------------------------------
-  TAHAP 1: PEMINJAMAN
+  Step 1 | Admin klik menu "Laporan" pada Sidebar
+          | Halaman: Reports (/admin/reports)
+          |
+  Step 2 | Admin memilih rentang waktu laporan:
+          |   - Harian (pilih tanggal tertentu)
+          |   - Mingguan
+          |   - Bulanan
+          |
+  Step 3 | Sistem menampilkan statistik:
+          |   - Total transaksi penitipan
+          |   - Total pengunjung unik
+          |   - Rata-rata durasi penitipan
+          |   - Kategori barang paling sering dititipkan
+          |   - Tingkat penggunaan lokasi penyimpanan
+          |   - Jumlah transaksi per satpam
+          |
+  Step 4 | Admin dapat mengekspor laporan ke format yang tersedia
+
+  HASIL      : Admin memiliki gambaran lengkap operasional penitipan barang
+  -------------------------------------------------------------------------
+
+
+================================================================================
+  USER JOURNEY 11: PENGUNJUNG - ALUR LENGKAP PENITIPAN & PENGAMBILAN
+================================================================================
+
+  TUJUAN     : Menggambarkan pengalaman pengunjung dari sudut pandang mereka
+  CATATAN    : Pengunjung tidak menggunakan aplikasi langsung, semua dicatat
+               oleh Satpam. Ini adalah journey dari perspektif pengunjung.
+
+  LANGKAH-LANGKAH:
+  -------------------------------------------------------------------------
+  FASE 1: KEDATANGAN & PENITIPAN
   ---------------------------------
-  Step 1 | Karyawan mendatangi meja gudang dan menyebutkan NIK/Nama serta
-          | daftar peralatan kerja yang dibutuhkan.
-  Step 2 | Penjaga gudang mengecek ketersediaan di sistem dan mengambilkan fisik alat.
-  Step 3 | Petugas mencatat transaksi di sistem dan mencetak Tanda Terima Pinjam.
-  Step 4 | Karyawan memeriksa kelengkapan fisik, menerima alat, serta menyimpan
-          | struk pinjaman bertanda QR Code.
+  Step 1 | Pengunjung tiba di gerbang/lobi perusahaan
+          |
+  Step 2 | Satpam meminta pengunjung untuk menitipkan barang bawaan
+          | (sesuai kebijakan perusahaan: tas, hp, dll.)
+          |
+  Step 3 | Pengunjung menyerahkan barang dan identitas (KTP) ke satpam
+          |
+  Step 4 | Satpam mencatat data pengunjung dan barang di SiPenitip
+          | (User Journey 2 - Penitipan Barang Baru)
+          |
+  Step 5 | Pengunjung menerima KARTU TITIPAN berisi:
+          |   - Kode Transaksi
+          |   - QR Code
+          |   - Daftar barang yang dititipkan
+          |   - Lokasi penyimpanan
+          |
+  Step 6 | Pengunjung menyimpan kartu titipan dengan baik
+          | Pengunjung masuk ke area perusahaan untuk urusan/keperluan
 
-  TAHAP 2: PENGGUNAAN & PENGEMBALIAN
+  FASE 2: PENGAMBILAN BARANG
   ---------------------------------
-  Step 5 | Karyawan menggunakan peralatan untuk pekerjaan operasional.
-  Step 6 | Sebelum atau pada tanggal batas waktu (due date), karyawan kembali
-          | ke gudang membawa alat dan struk tanda terima.
-  Step 7 | Petugas memindai QR Code, menginspeksi kondisi fisik alat bersama karyawan.
-  Step 8 | Petugas mengonfirmasi pengembalian di sistem.
-  Step 9 | Karyawan menerima konfirmasi bahwa peminjaman telah resmi diselesaikan.
+  Step 7 | Pengunjung selesai berurusan dan kembali ke meja satpam
+          |
+  Step 8 | Pengunjung menunjukkan KARTU TITIPAN (QR Code) ke satpam
+          |
+  Step 9 | Satpam scan QR Code dan memverifikasi identitas pengunjung
+          |
+  Step 10| Satpam mencocokkan daftar barang dan menyerahkan satu per satu
+           |
+  Step 11| Pengunjung memeriksa kelengkapan barang
+           |
+  Step 12| Proses selesai, pengunjung meninggalkan area perusahaan
 
-  HASIL      : Karyawan terfasilitasi alat kerja resmi tanpa kekhawatiran sengketa
-               kehilangan berkat bukti digital dan fisik yang transparan.
+  ALTERNATIF - PENGAMBILAN OLEH PERWAKILAN:
+  ---------------------------------
+  Step 8b | Pengunjung tidak bisa mengambil sendiri (sakit, darurat, dll.)
+           | Mengirimkan perwakilan dengan membawa:
+           |   - Kartu titipan / kode transaksi
+           |   - Surat Kuasa / Dokumen Bukti Kuasa
+           |   - KTP perwakilan
+           |
+  Step 9b | Satpam memverifikasi dokumen kuasa dan identitas perwakilan
+           |
+  Step 10b| Satpam mencatat data perwakilan di sistem sebelum menyerahkan barang
+           |
+  Step 11b| Barang diserahkan ke perwakilan, proses selesai
+
+  HASIL      : Pengunjung mendapatkan kembali semua barang titipannya dengan
+               aman dan terverifikasi
   -------------------------------------------------------------------------
 
 
 ================================================================================
-  SIKLUS STATUS TRANSAKSI PEMINJAMAN
+  ALUR STATUS TRANSAKSI
 ================================================================================
 
-  [borrowed] ────────────> [partial_returned] ────────────> [returned]
-      │                           │
-      │ (Alat dikembalikan        │ (Sisa alat dikembalikan
-      │  sebagian)                │  seluruhnya)
-      │                           ▼
-      └───────────────────────────────────────────────────> [returned]
-      │                                                     (Kembali penuh)
-      ▼ (Jika dibatalkan tanpa serah terima)
-  [cancelled]
+  Setiap transaksi penitipan melewati status berikut:
+
+  [PENDING] ──────────────────> [ACTIVE] ──────────────────> [COMPLETED]
+     |                             |                               |
+  Transaksi baru               Barang sudah                  Barang sudah
+  dibuat oleh satpam           disimpan di loker             diambil kembali
+
+
+  Status Lokasi Penyimpanan:
+  [AVAILABLE] ────────> [OCCUPIED] ────────> [AVAILABLE]
+  (Kosong/Tersedia)    (Terisi saat ada      (Kembali kosong
+                        titipan aktif)        setelah diambil)
 
 
 ================================================================================
-  RINGKASAN HALAMAN APLIKASI (RUTE RESMI)
+  FITUR KEAMANAN SISTEM
 ================================================================================
 
-  RUTE AUTENTIKASI:
-  - /login                   -> Masuk ke sistem
-  - /forgot-password         -> Permintaan reset kata sandi
-  - /reset-password          -> Formulir kata sandi baru
-  - /auth/callback           -> Penanganan callback autentikasi email
+  1. Autentikasi
+     - Login menggunakan email + password via Supabase Auth
+     - Session token otomatis expired
 
-  RUTE OPERASIONAL (Penjaga Gudang & Admin):
-  - /dashboard               -> Dashboard metrik real-time & status rak
-  - /inventaris              -> Katalog master inventaris
-  - /inventaris/tambah       -> Pendaftaran master barang baru
-  - /inventaris/:id          -> Rincian detail barang & spesifikasi
-  - /inventaris/:id/edit     -> Edit metadata barang
-  - /inventaris/barang-masuk -> Penerimaan stok masuk (stock in)
-  - /inventaris/penyesuaian-stok -> Penyesuaian kuantitas fisik (adjustment)
-  - /inventaris/pergerakan-stok -> Buku besar ledger mutasi stok
-  - /kategori-barang         -> Master kategori peralatan
-  - /lokasi-penyimpanan      -> Master rak/loker & visualisasi kapasitas
-  - /peminjam                -> Direktori karyawan peminjam
-  - /peminjaman              -> Daftar peminjaman aktif & overdue
-  - /peminjaman/tambah       -> Formulir peminjaman multi-barang baru
-  - /peminjaman/:id          -> Rincian transaksi & cetak struk QR Code
-  - /peminjaman/:id/pengembalian -> Form serah terima pengembalian alat
-  - /pengembalian            -> Halaman cepat pencarian tiket kembali
-  - /riwayat                 -> Audit riwayat seluruh transaksi peminjaman
-  - /profil                  -> Pengaturan profil pengguna
+  2. Otorisasi Berbasis Role
+     - Role SATPAM : Akses fitur operasional saja
+     - Role ADMIN  : Akses penuh (operasional + manajemen)
+     - Halaman admin tidak dapat diakses oleh satpam
 
-  RUTE KHUSUS ADMINISTRATOR:
-  - /manajemen-petugas       -> Manajemen akun staf, aktivasi & role
-  - /laporan                 -> Pusat laporan terpadu & ekspor CSV
+  3. QR Code Verifikasi
+     - Setiap transaksi memiliki kode unik yang terenkripsi
+     - QR Code digunakan sebagai bukti pengambilan
+
+  4. Audit Trail
+     - Semua aksi tercatat di tabel transaction_logs
+     - Mencatat siapa, apa, dan kapan setiap perubahan terjadi
+
+  5. Validasi Perwakilan
+     - Pengambilan oleh orang lain wajib disertai surat kuasa
+     - Data perwakilan (nama + KTP) dicatat di sistem
+
 
 ================================================================================
-  AKHIR DOKUMEN
+  RINGKASAN HALAMAN APLIKASI
+================================================================================
+
+  HALAMAN PUBLIK (tanpa login):
+  - /                     -> Redirect ke /login
+  - /login                -> Halaman Login
+  - /forgot-password      -> Halaman Lupa Password
+  - /reset-password       -> Halaman Reset Password
+  - /auth/callback        -> Callback verifikasi email
+
+  HALAMAN SATPAM & ADMIN:
+  - /dashboard            -> Dashboard utama
+  - /deposits/new         -> Form titipan baru
+  - /deposits/active      -> Daftar titipan aktif
+  - /deposits/history     -> Riwayat semua transaksi
+  - /pickup               -> Proses pengambilan barang
+  - /visitors             -> Data pengunjung
+  - /profile              -> Profil & pengaturan akun
+
+  HALAMAN KHUSUS ADMIN:
+  - /admin/categories     -> Manajemen kategori barang
+  - /admin/storage        -> Manajemen lokasi penyimpanan
+  - /admin/staff          -> Manajemen akun staf
+  - /admin/reports        -> Laporan & statistik
+
+
+================================================================================
+  END OF DOCUMENT
 ================================================================================

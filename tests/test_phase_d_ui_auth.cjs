@@ -5,7 +5,7 @@
  * 2. Penolakan akses untuk akun nonaktif (is_active !== true).
  * 3. Revalidasi sesi server-backed pada perpindahan rute tanpa terpengaruh network error.
  * 4. Proteksi rute ProtectedRoute.
- * 5. Batasan navigasi modul gudang baru (isolasi penuh dari rute usang).
+ * 5. Batasan navigasi modul gudang baru (tidak membocorkan form penitipan pengunjung lama).
  * 6. Validasi form login.
  * 7. Agregasi KPI stok aktual menggunakan skema tabel items (total, available, maintenance, borrowed).
  * 8. Deteksi keterlambatan peminjaman berbasis kolom nyata expected_return_at dan status.
@@ -349,7 +349,7 @@ function runPhaseDTests() {
 
   // 12. Sanitasi Branding Sistem Gudang
   test('12. App branding reflects PT Vinix Seven Aurum Warehouse Management System', () => {
-    const appTitle = 'PT Vinix Seven Aurum · Warehouse Management System';
+    const appTitle = 'SiPenitip — PT Vinix Seven Aurum · Warehouse Management System';
     assert.ok(appTitle.includes('PT Vinix Seven Aurum'));
     assert.ok(appTitle.includes('Warehouse Management System'));
     assert.strictEqual(appTitle.includes('Pengunjung'), false);
