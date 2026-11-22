@@ -1,6 +1,6 @@
 -- ============================================================
 -- PHASE A MIGRATION: Security Hardening & Role Migration
--- Project: SiPenitip — PT Vinix Seven Aurum Warehouse Management System
+-- Project: PT Vinix Seven Aurum Warehouse Management System
 -- Date: 2026-11-13
 --
 -- IMPORTANT SAFETY NOTES:
@@ -350,7 +350,7 @@ BEGIN
   FOR UPDATE;
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Transaksi penitipan tidak ditemukan.';
+    RAISE EXCEPTION 'Transaksi tidak ditemukan.';
   END IF;
 
   IF v_transaction.status != 'stored' THEN

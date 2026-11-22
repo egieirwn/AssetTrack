@@ -76,7 +76,7 @@ Seluruh migrasi skema database tersusun secara terstruktur dalam folder `supabas
 | `20261113000002_phase_b1_security_and_integrity_review.sql` | Hardening foreign keys, constraints stok non-negatif, dan integritas referensial. |
 | `20261113000003_phase_b2_security_hardening.sql` | Kebijakan Row Level Security (RLS) dan pengetatan izin operasional. |
 | `20261115000000_deactivate_new_signups_pending_approval.sql` | Kebijakan keamanan pendaftaran: akun baru otomatis `is_active = FALSE` sampai disetujui Admin. |
-| `20261116000000_remove_legacy_visitor_deposit_schema.sql` | Migrasi pembersihan: menjatuhkan objek skema penitipan usang dengan klausul `RESTRICT`. |
+| `20261116000000_remove_legacy_visitor_deposit_schema.sql` | Migrasi pembersihan: menjatuhkan objek skema usang dengan klausul `RESTRICT`. |
 
 ### Entitas Tabel Inti:
 1. `profiles`: Data akun pengguna dan petugas gudang (`admin` dan `warehouse_keeper`).

@@ -1,6 +1,6 @@
 -- ============================================================
 -- CORRECTIVE MIGRATION: New User Registration Approval Policy
--- Project: SiPenitip — PT Vinix Seven Aurum Warehouse Management System
+-- Project: PT Vinix Seven Aurum Warehouse Management System
 -- Date: 2026-11-15
 --
 -- PURPOSE:

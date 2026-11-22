@@ -1,14 +1,14 @@
-# Dokumentasi Sistem Manajemen Gudang & Peminjaman Barang SiPenitip
+# Dokumentasi Sistem Manajemen Gudang & Peminjaman Barang (Vinix WMS)
 ## PT Vinix Seven Aurum
 
 ---
 
 ## 1. Ikhtisar Arsitektur Sistem
 
-Sistem **SiPenitip** telah bertransformasi dari sistem awal *Visitor Left-Luggage* (Penitipan Barang Pengunjung) menjadi **Warehouse Inventory & Borrowing Management System** yang komprehensif untuk PT Vinix Seven Aurum.
+Aplikasi ini merupakan **Warehouse Inventory & Borrowing Management System** yang komprehensif untuk PT Vinix Seven Aurum.
 
-Transformasi arsitektural ini mencakup:
-- **Pondasi Keamanan (Phase A):** Migrasi skema role ke dua peran baku (`admin` dan `warehouse_keeper`), proteksi profil pengguna, pencegahan eskalasi hak istimewa secara mandiri (*self-promotion*), dan isolasi data historis penitipan barang pengunjung.
+Fondasi arsitektural ini mencakup:
+- **Pondasi Keamanan (Phase A):** Skema role ke dua peran baku (`admin` dan `warehouse_keeper`), proteksi profil pengguna, pencegahan eskalasi hak istimewa secara mandiri (*self-promotion*), dan isolasi audit trail.
 - **Skema Inventaris & Peminjaman (Phase B, B.1, B.2):** Penambahan skema gudang enterprise (`items`, `item_categories`, `storage_locations`, `borrowers`, `borrowings`, `borrowing_items`, `stock_movements`, dan `activity_logs`), penegakan integritas stok secara transaksional melalui PostgreSQL Triggers dan RPC berstatus `SECURITY DEFINER`, penguncian baris (`FOR UPDATE`), serta pemblokiran mutasi langsung dari sisi klien.
 - **Manajemen Akun & Otorisasi (Phase C):** Modul administrasi staf terproteksi bagi Admin untuk mengelola akun penjaga gudang (`warehouse_keeper`).
 - **Refaktor Antarmuka Pengguna (Phase D):** Redesain visual menyeluruh terinspirasi dari sistem desain modern *Atrium*, pembersihan fallback data tiruan (*zero silent mock data*), dan integrasi autentikasi fail-closed.
@@ -20,7 +20,7 @@ Transformasi arsitektural ini mencakup:
 
 ## 2. Matriks Peran & Hak Akses (Roles & Permissions)
 
-Sistem SiPenitip secara ketat hanya mengenal dua peran (*authenticated roles*):
+Sistem secara ketat hanya mengenal dua peran (*authenticated roles*):
 
 | Modul / Operasi | Admin | Warehouse Keeper | Catatan Keamanan |
 | :--- | :---: | :---: | :--- |

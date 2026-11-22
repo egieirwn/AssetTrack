@@ -1,6 +1,6 @@
 /**
  * Test Suite: Supabase Authentication Adjustment — Disable Email Confirmation & Pending Approval Policy
- * SiPenitip — PT Vinix Seven Aurum
+ * PT Vinix Seven Aurum Warehouse Management System
  *
  * Memvalidasi 15 Persyaratan Pengujian:
  * 1. Signup dengan session langsung (immediately returned Supabase session).
