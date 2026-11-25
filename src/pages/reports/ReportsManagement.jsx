@@ -293,6 +293,60 @@ export default function ReportsManagement() {
   // Departments for borrowing filter
   const departmentsList = Array.from(new Set(borrowingData.map(b => b.borrowers?.department).filter(Boolean))).sort();
 
+  // Helper function to produce human-readable filter descriptions
+  const getFilterSummaryText = () => {
+    if (activeTab === 'inventory') {
+      const catObj = categoriesList.find(c => c.id === invCategoryFilter);
+      const locObj = locationsList.find(l => l.id === invLocationFilter);
+      const catName = catObj ? catObj.name : (invCategoryFilter === 'all' ? 'Semua Kategori' : invCategoryFilter);
+      const locName = locObj ? `${locObj.code} - ${locObj.name}` : (invLocationFilter === 'all' ? 'Semua Lokasi' : invLocationFilter);
+      const typeName = invTrackingFilter === 'individual' ? 'Aset Individual' : invTrackingFilter === 'quantity' ? 'Kuantitas Massal' : 'Semua Tipe';
+      const statusMap = {
+        all: 'Semua Status',
+        available: 'Stok Tersedia',
+        empty: 'Stok Habis (0)',
+        damaged: 'Ada Rusak / Servis',
+        inactive: 'Nonaktif'
+      };
+      const statusName = statusMap[invStatusFilter] || invStatusFilter;
+      return `Kategori: ${catName} | Lokasi: ${locName} | Tipe: ${typeName} | Status: ${statusName}`;
+    }
+    if (activeTab === 'borrowing') {
+      const statusMap = {
+        all: 'Semua Status',
+        borrowed: 'Sedang Dipinjam',
+        partial_returned: 'Kembali Sebagian',
+        overdue: 'Terlambat',
+        returned: 'Selesai Dikembalikan',
+        cancelled: 'Dibatalkan'
+      };
+      const statusName = statusMap[brwStatusFilter] || brwStatusFilter;
+      const deptName = brwDeptFilter === 'all' ? 'Semua Departemen' : brwDeptFilter;
+      const period = (brwStartDate || brwEndDate) ? `${brwStartDate || 'Awal'} s/d ${brwEndDate || 'Sekarang'}` : 'Semua Periode';
+      return `Status: ${statusName} | Departemen: ${deptName} | Periode: ${period}`;
+    }
+    if (activeTab === 'movements') {
+      const typeMap = {
+        all: 'Semua Jenis',
+        stock_in: 'Penerimaan Stok',
+        adjustment: 'Koreksi Stok',
+        borrowed: 'Peminjaman',
+        returned_good: 'Pengembalian Baik',
+        returned_damaged: 'Pengembalian Rusak',
+        cancelled: 'Pembatalan Peminjaman'
+      };
+      const typeName = typeMap[movTypeFilter] || movTypeFilter;
+      const period = (movStartDate || movEndDate) ? `${movStartDate || 'Awal'} s/d ${movEndDate || 'Sekarang'}` : 'Semua Periode';
+      return `Jenis Mutasi: ${typeName} | Periode: ${period}`;
+    }
+    if (activeTab === 'audit') {
+      const period = (auditStartDate || auditEndDate) ? `${auditStartDate || 'Awal'} s/d ${auditEndDate || 'Sekarang'}` : 'Semua Periode';
+      const actionName = auditActionFilter === 'all' ? 'Semua Aksi' : auditActionFilter;
+      return `Aksi: ${actionName} | Periode: ${period}`;
+    }
+    return 'Semua Kriteria';
+  };
+
   // --------------------------------------------------------------------------
   // EXPORT HANDLERS (CSV & PDF Print)
   // --------------------------------------------------------------------------
@@ -318,6 +372,14 @@ export default function ReportsManagement() {
 
     const rows = filteredInventory.map((item, idx) => {
       const borrowed = Math.max(0, (item.total_qty || 0) - ((item.available_qty || 0) + (item.damaged_qty || 0) + (item.under_repair_qty || 0)));
+      const formatCondition = (c) => {
+        if (!c) return 'Baik';
+        if (c.toLowerCase() === 'baik') return 'Baik';
+        if (c.toLowerCase() === 'rusak') return 'Rusak';
+        if (c.toLowerCase() === 'perbaikan') return 'Perbaikan';
+        return c.charAt(0).toUpperCase() + c.slice(1);
+      };
+
       return [
         idx + 1,
         item.item_code,
@@ -331,7 +393,7 @@ export default function ReportsManagement() {
         borrowed,
         item.damaged_qty || 0,
         item.under_repair_qty || 0,
-        item.condition || 'baik',
+        formatCondition(item.condition),
         item.is_active ? 'Aktif' : 'Nonaktif'
       ];
     });
@@ -339,7 +401,7 @@ export default function ReportsManagement() {
     const metadata = {
       title: 'LAPORAN REKAPITULASI INVENTARIS GUDANG',
       generatedAt: new Date().toLocaleString('id-ID'),
-      filterSummary: `Kategori: ${invCategoryFilter}, Lokasi: ${invLocationFilter}, Tipe: ${invTrackingFilter}, Status: ${invStatusFilter}`
+      filterSummary: getFilterSummaryText()
     };
 
     exportToCsv(`laporan-inventaris-${Date.now()}`, headers, rows, metadata);
@@ -365,28 +427,42 @@ export default function ReportsManagement() {
       'Catatan'
     ];
 
-    const rows = filteredBorrowings.map((b, idx) => [
-      idx + 1,
-      b.transaction_code,
-      b.borrowers?.full_name || '—',
-      b.borrowers?.employee_id || '—',
-      b.borrowers?.department || '—',
-      b.purpose || '—',
-      b.line_count || 0,
-      b.total_units || 0,
-      formatIndonesianDate(b.borrowed_at, true),
-      formatIndonesianDate(b.expected_return_at, true),
-      b.returned_at ? formatIndonesianDate(b.returned_at, true) : 'Belum Kembali',
-      b.is_overdue && b.status !== 'returned' && b.status !== 'cancelled' ? 'TERLAMBAT' : b.status,
-      b.recorded_profile?.full_name || 'Petugas',
-      b.returned_profile?.full_name || '—',
-      b.notes || ''
-    ]);
+    const statusTranslations = {
+      borrowed: 'Sedang Dipinjam',
+      partial_returned: 'Kembali Sebagian',
+      returned: 'Selesai Dikembalikan',
+      cancelled: 'Dibatalkan'
+    };
+
+    const rows = filteredBorrowings.map((b, idx) => {
+      let statusLabel = statusTranslations[b.status] || b.status;
+      if (b.is_overdue && b.status !== 'returned' && b.status !== 'cancelled') {
+        statusLabel = 'TERLAMBAT';
+      }
+
+      return [
+        idx + 1,
+        b.transaction_code,
+        b.borrowers?.full_name || '—',
+        b.borrowers?.employee_id || '—',
+        b.borrowers?.department || '—',
+        b.purpose || '—',
+        b.line_count || 0,
+        b.total_units || 0,
+        formatIndonesianDate(b.borrowed_at, true),
+        formatIndonesianDate(b.expected_return_at, true),
+        b.returned_at ? formatIndonesianDate(b.returned_at, true) : 'Belum Kembali',
+        statusLabel,
+        b.recorded_profile?.full_name || 'Petugas',
+        b.returned_profile?.full_name || '—',
+        b.notes || ''
+      ];
+    });
 
     const metadata = {
       title: 'LAPORAN TRANSAKSI PEMINJAMAN & PENGEMBALIAN',
       generatedAt: new Date().toLocaleString('id-ID'),
-      filterSummary: `Status: ${brwStatusFilter}, Dept: ${brwDeptFilter}, Periode: ${brwStartDate || 'Awal'} s/d ${brwEndDate || 'Sekarang'}`
+      filterSummary: getFilterSummaryText()
     };
 
     exportToCsv(`laporan-peminjaman-${Date.now()}`, headers, rows, metadata);
@@ -406,12 +482,21 @@ export default function ReportsManagement() {
       'Keterangan / Alasan'
     ];
 
+    const movementTypeMap = {
+      stock_in: 'Penerimaan Stok',
+      adjustment: 'Koreksi Stok',
+      borrowed: 'Peminjaman',
+      returned_good: 'Pengembalian (Baik)',
+      returned_damaged: 'Pengembalian (Rusak)',
+      cancelled: 'Pembatalan Peminjaman'
+    };
+
     const rows = filteredMovements.map((m, idx) => [
       idx + 1,
       formatIndonesianDate(m.created_at, true),
       m.items?.item_code || '—',
       m.items?.name || '—',
-      m.movement_type,
+      movementTypeMap[m.movement_type] || m.movement_type,
       (m.quantity_delta > 0 ? `+${m.quantity_delta}` : `${m.quantity_delta}`) + ' unit',
       `${m.qty_after ?? '—'} unit`,
       m.performed_profile?.full_name || 'Petugas',
@@ -421,7 +506,7 @@ export default function ReportsManagement() {
     const metadata = {
       title: 'LAPORAN BUKU BESAR MUTASI STOK GUDANG',
       generatedAt: new Date().toLocaleString('id-ID'),
-      filterSummary: `Jenis Mutasi: ${movTypeFilter}, Periode: ${movStartDate || 'Awal'} s/d ${movEndDate || 'Sekarang'}`
+      filterSummary: getFilterSummaryText()
     };
 
     exportToCsv(`laporan-mutasi-stok-${Date.now()}`, headers, rows, metadata);
@@ -452,7 +537,7 @@ export default function ReportsManagement() {
     const metadata = {
       title: 'LAPORAN LOG AUDIT & AKTIVITAS SISTEM',
       generatedAt: new Date().toLocaleString('id-ID'),
-      filterSummary: `Aksi: ${auditActionFilter}, Periode: ${auditStartDate || 'Awal'} s/d ${auditEndDate || 'Sekarang'}`
+      filterSummary: getFilterSummaryText()
     };
 
     exportToCsv(`laporan-audit-log-${Date.now()}`, headers, rows, metadata);
@@ -478,22 +563,25 @@ export default function ReportsManagement() {
   const brwCompletedCount = filteredBorrowings.filter(b => b.status === 'returned').length;
 
   return (
-    <div className="atrium-content-container">
+    <div className="atrium-content-container atrium-printable-report">
       {/* Printable Report Header Block (Only visible during print) */}
-      <div className="atrium-printable-receipt" style={{ display: 'none' }}>
-        <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
-          <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.25rem', fontWeight: 800 }}>PT VINIX SEVEN AURUM</h2>
-          <div style={{ fontSize: '0.8125rem', color: '#475569', textTransform: 'uppercase' }}>
+      <div className="print-only report-print-header">
+        <div style={{ textAlign: 'center', borderBottom: '2px solid #0f172a', paddingBottom: '0.75rem', marginBottom: '1.25rem' }}>
+          <h2 style={{ margin: '0 0 0.25rem', fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>PT VINIX SEVEN AURUM</h2>
+          <div style={{ fontSize: '0.8125rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
             Warehouse Inventory & Borrowing Management System
           </div>
-          <div style={{ margin: '0.75rem 0 0.25rem', fontSize: '1.125rem', fontWeight: 700, color: '#2563eb' }}>
+          <div style={{ margin: '0.5rem 0 0.25rem', fontSize: '1.125rem', fontWeight: 700, color: '#0f172a' }}>
             {activeTab === 'inventory' ? 'LAPORAN REKAPITULASI INVENTARIS GUDANG'
               : activeTab === 'borrowing' ? 'LAPORAN TRANSAKSI PEMINJAMAN & PENGEMBALIAN'
-              : activeTab === 'movements' ? 'LAPORAN BUKU BESAR MUTASI STOK'
+              : activeTab === 'movements' ? 'LAPORAN BUKU BESAR MUTASI STOK GUDANG'
               : 'LAPORAN LOG AUDIT AKTIVITAS SISTEM'}
           </div>
           <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-            Waktu Pembuatan: {new Date().toLocaleString('id-ID')} | Petugas: {profile?.full_name || 'Administrator'}
+            Waktu Cetak: {new Date().toLocaleString('id-ID')} | Dicetak Oleh: {profile?.full_name || 'Administrator'} ({profile?.role === 'admin' ? 'Superadmin' : 'Petugas Gudang'})
+          </div>
+          <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.25rem', fontStyle: 'italic' }}>
+            Kriteria Filter: {getFilterSummaryText()}
           </div>
         </div>
       </div>
@@ -1257,17 +1345,17 @@ export default function ReportsManagement() {
       )}
 
       {/* Printable Report Signatures Block (Only visible during print) */}
-      <div className="atrium-printable-receipt" style={{ display: 'none', marginTop: '3rem' }}>
+      <div className="print-only report-print-footer" style={{ marginTop: '2.5rem', pageBreakInside: 'avoid' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', textAlign: 'center', fontSize: '0.8125rem' }}>
           <div>
-            <div style={{ color: '#64748b', marginBottom: '4rem' }}>Disiapkan Oleh,</div>
-            <div style={{ fontWeight: 700, borderTop: '1px solid #0f172a', paddingTop: '0.25rem', width: '200px', margin: '0 auto' }}>
+            <div style={{ color: '#64748b', marginBottom: '3.5rem' }}>Disiapkan Oleh,</div>
+            <div style={{ fontWeight: 700, borderTop: '1px solid #0f172a', paddingTop: '0.25rem', width: '200px', margin: '0 auto', color: '#0f172a' }}>
               {profile?.full_name || 'Petugas Gudang'}
             </div>
           </div>
           <div>
-            <div style={{ color: '#64748b', marginBottom: '4rem' }}>Mengetahui & Menyetujui,</div>
-            <div style={{ fontWeight: 700, borderTop: '1px solid #0f172a', paddingTop: '0.25rem', width: '200px', margin: '0 auto' }}>
+            <div style={{ color: '#64748b', marginBottom: '3.5rem' }}>Mengetahui & Menyetujui,</div>
+            <div style={{ fontWeight: 700, borderTop: '1px solid #0f172a', paddingTop: '0.25rem', width: '200px', margin: '0 auto', color: '#0f172a' }}>
               Kepala Operasional Gudang
             </div>
           </div>

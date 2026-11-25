@@ -13,7 +13,7 @@
  * it is prefixed with a single quote (') so spreadsheet engines (Excel, LibreOffice,
  * Google Sheets) treat it strictly as literal text.
  */
-export function sanitizeCsvCell(value) {
+export function sanitizeCsvCell(value, delimiter = ';') {
   if (value === null || value === undefined) {
     return '';
   }
@@ -29,8 +29,8 @@ export function sanitizeCsvCell(value) {
     str = `'` + str;
   }
 
-  // If the cell contains quotes, commas, or newlines, wrap in quotes and escape internal quotes
-  if (/[",\n\r]/.test(str)) {
+  // If the cell contains quotes, delimiter, commas, or newlines, wrap in quotes and escape internal quotes
+  if (str.includes('"') || str.includes(delimiter) || str.includes('\n') || str.includes('\r')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
 
@@ -39,37 +39,39 @@ export function sanitizeCsvCell(value) {
 
 /**
  * Exports data to a CSV file encoded in UTF-8 with BOM for perfect Microsoft Excel compatibility.
+ * Default delimiter is semicolon (;) for native Indonesian and international Excel spreadsheet opening.
  * 
  * @param {string} filename - Target filename (e.g. 'laporan-inventaris.csv')
  * @param {Array<string>} headers - Column titles array
  * @param {Array<Array<any>>} rows - 2D array of row cells
- * @param {Object} metadata - Optional header metadata (title, period, generatedAt, generatedBy)
+ * @param {Object} metadata - Optional header metadata (title, period, generatedAt, filterSummary)
+ * @param {string} delimiter - CSV cell delimiter, default ';' (Excel-friendly in id-ID locale)
  */
-export function exportToCsv(filename, headers, rows, metadata = {}) {
+export function exportToCsv(filename, headers, rows, metadata = {}, delimiter = ';') {
   const lines = [];
 
   // 1. Optional Metadata Header block
   if (metadata.title) {
-    lines.push(sanitizeCsvCell(`PT VINIX SEVEN AURUM - WAREHOUSE MANAGEMENT SYSTEM`));
-    lines.push(sanitizeCsvCell(metadata.title));
+    lines.push(sanitizeCsvCell(`PT VINIX SEVEN AURUM - WAREHOUSE MANAGEMENT SYSTEM`, delimiter));
+    lines.push(sanitizeCsvCell(metadata.title, delimiter));
   }
   if (metadata.generatedAt) {
-    lines.push(sanitizeCsvCell(`Waktu Pembuatan: ${metadata.generatedAt}`));
+    lines.push(sanitizeCsvCell(`Waktu Pembuatan: ${metadata.generatedAt}`, delimiter));
   }
   if (metadata.filterSummary) {
-    lines.push(sanitizeCsvCell(`Kriteria Filter: ${metadata.filterSummary}`));
+    lines.push(sanitizeCsvCell(`Kriteria Filter: ${metadata.filterSummary}`, delimiter));
   }
   if (metadata.title || metadata.generatedAt || metadata.filterSummary) {
     lines.push(''); // Blank separator line
   }
 
   // 2. Column Headers
-  const headerLine = headers.map(h => sanitizeCsvCell(h)).join(',');
+  const headerLine = headers.map(h => sanitizeCsvCell(h, delimiter)).join(delimiter);
   lines.push(headerLine);
 
   // 3. Data Rows
   rows.forEach(row => {
-    const rowLine = row.map(cell => sanitizeCsvCell(cell)).join(',');
+    const rowLine = row.map(cell => sanitizeCsvCell(cell, delimiter)).join(delimiter);
     lines.push(rowLine);
   });
 
